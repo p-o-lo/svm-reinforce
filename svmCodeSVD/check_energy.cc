@@ -33,8 +33,7 @@ M load_csv (const std::string & path) {
     return Map<const Matrix<typename M::Scalar, M::RowsAtCompileTime, M::ColsAtCompileTime, RowMajor>>(values.data(), rows, values.size()/rows);
 }
 
-int
-main(int argc, char ** argv)
+int main(int argc, char ** argv)
 {
   if(argc!=3)
   {
