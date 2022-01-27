@@ -17,7 +17,7 @@ class svmEnv(gym.Env): # inherit from super class gym (OpenAI)
         self.action_space = spaces.Box(low=-1., high=1., shape=(n_pairs,)\
                                        ,dtype=np.float32)
         
-        self.observation_space = spaces.Box(low=-100., high=200., shape=(1,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=-np.inf, high=+np.inf, shape=(1,), dtype=np.float32)
         
         self.actions_taken = []
         self.energies = [0.0]
@@ -42,7 +42,7 @@ class svmEnv(gym.Env): # inherit from super class gym (OpenAI)
         return self.agent_pos 
     
     def step(self, action):
-        action = (action + 111.0/109.0)*109.0/2.0
+        action = (action + 111.0/109.0)*109.0/2.0 
         print("****CALL STEP****")
         print("Action chosen at step: ", action)
         info = {}
@@ -80,19 +80,21 @@ class svmEnv(gym.Env): # inherit from super class gym (OpenAI)
             np.savetxt(self.sigmas, self.actions_taken, fmt="%f")
             self.sigmas.close()
             
+            reward = -1.0
+
             if math.isnan(result_en):
-                reward = -1.0
+                reward = 100*reward
                 self.agent_pos = np.array([self.energies[-1]]).astype(np.float32)
                 print("IS NAN --> Set reward: ", reward)
                 print("IS NAN --> Set agent pos to prev energy: ", self.agent_pos)
         
             elif result_en >= self.energies[-1]:
-                reward = 0.01*(self.energies[-1] - result_en)
+                reward = reward*(self.energies[-1] - result_en)
                 print("The energy is greater than previous energy --> Set reward: ", reward)
                 print("This action IS REMOVED from actions taken and sigmas, the energy is NOT STORED!")        
             
             elif result_en < -0.1026:
-                reward = 0.01*(result_en - self.energies[-1])
+                reward = reward*(result_en - self.energies[-1])
                 print("Is less than target energy --> Set reward: ", reward)
             
             done = False
@@ -108,7 +110,7 @@ class svmEnv(gym.Env): # inherit from super class gym (OpenAI)
             print("Store the energy got!")
             self.energies.append(result_en)
             
-            reward = 100.0*(self.energies[-2] - self.energies[-1])
+            reward = 1.0
             print("Reward is positive!", reward)
             
             print("Calculate the diff between dim: ")
@@ -118,8 +120,8 @@ class svmEnv(gym.Env): # inherit from super class gym (OpenAI)
             
             if (diff2 > 0):
                 print("Add a PENALTY on the rewards!!")
-                reward = -diff2*reward
-                print("Reward is negative!", reward)
+                reward = -0.2*diff2*reward
+                print("Reward is slightly negative!", reward)
             if (diff2 < 0):
                 print("INCREASE the reward")
                 reward = -diff2*reward
