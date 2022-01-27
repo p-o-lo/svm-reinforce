@@ -89,12 +89,12 @@ class svmEnv(gym.Env): # inherit from super class gym (OpenAI)
                 print("IS NAN --> Set agent pos to prev energy: ", self.agent_pos)
         
             elif result_en >= self.energies[-1]:
-                reward = reward*(self.energies[-1] - result_en)
+                reward = 1000*reward*(result_en - self.energies[-1])
                 print("The energy is greater than previous energy --> Set reward: ", reward)
                 print("This action IS REMOVED from actions taken and sigmas, the energy is NOT STORED!")        
             
             elif result_en < -0.1026:
-                reward = reward*(result_en - self.energies[-1])
+                reward = 1000*reward*(self.energies[-1] - result_en)
                 print("Is less than target energy --> Set reward: ", reward)
             
             done = False
