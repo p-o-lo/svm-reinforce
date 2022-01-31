@@ -16,25 +16,23 @@ TAU = 1e-3              # for soft update of target parameters
 LR_ACTOR = 1e-4         # learning rate of the actor 
 LR_CRITIC = 1e-4        # learning rate of the critic
 WEIGHT_DECAY = 0        # L2 weight decay
-UPDATE_EVERY = 20
-NUM_UPDATE = 10
+UPDATE_EVERY = 1
+NUM_UPDATE = 1
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class Agent():
     """Interacts with and learns from the environment."""
     
-    def __init__(self, n_agents, state_size, action_size, random_seed):
+    def __init__(self, state_size, action_size, random_seed):
         """Initialize an Agent object.
         
         Params
         ======
-            n_agents(int): number of agents
             state_size (int): dimension of each state
             action_size (int): dimension of each action
             random_seed (int): random seed
         """
-        self.n_agents = n_agents
         self.state_size = state_size
         self.action_size = action_size
         self.seed = random.seed(random_seed)
@@ -51,15 +49,14 @@ class Agent():
         self.critic_optimizer = optim.Adam(self.critic_local.parameters(), lr=LR_CRITIC, weight_decay=WEIGHT_DECAY)
 
         # Noise process
-        self.noise = OUNoise((n_agents,action_size), random_seed)
+        self.noise = OUNoise(action_size, random_seed)
 
         # Replay memory
         self.memory = ReplayBuffer(action_size, BUFFER_SIZE, BATCH_SIZE, random_seed)
 
 
     def step(self, state, action, reward, next_state, done):
-        for i in range(self.n_agents):
-            self.memory.add(state[i,:], action[i,:], reward[i], next_state[i,:], done[i])
+        self.memory.add(state, action, reward, next_state, done)
         
         #self.memory.add(state, action, reward, next_state, done)
         
@@ -73,12 +70,9 @@ class Agent():
     def act(self, states, add_noise=True):
         """Returns actions for given state as per current policy."""
         states = torch.from_numpy(states).float().to(device)
-        actions = np.zeros((self.n_agents, self.action_size))
         self.actor_local.eval()
         with torch.no_grad():
-            for agent_num, state in enumerate(states):
-                action = self.actor_local(state).cpu().data.numpy()
-                actions[agent_num,:] = action
+            actions = self.actor_local(states).cpu().data.numpy()
         self.actor_local.train()
         if add_noise:
             actions += self.noise.sample()
@@ -144,7 +138,7 @@ class Agent():
 class OUNoise:
     """Ornstein-Uhlenbeck process."""
 
-    def __init__(self, size, seed, mu=0., theta=0.15, sigma=0.2):
+    def __init__(self, size, seed, mu=0., theta=0.15, sigma=0.3):
         """Initialize parameters and noise process."""
         self.mu = mu * np.ones(size)
         self.theta = theta
