@@ -111,8 +111,9 @@ class svmEnv(gym.Env): # inherit from super class gym (OpenAI)
             self.energies.append(result_en)
             
             reward = 1.0
-            
-            
+            reward = reward + (result_en - self.energies[-1])
+            print("Reward is positive!", reward)
+
             print("Calculate the diff between dim: ")
             self.diff_dim.append(diff)
             diff2 = self.diff_dim[-1] - self.diff_dim[-2]
@@ -127,10 +128,6 @@ class svmEnv(gym.Env): # inherit from super class gym (OpenAI)
                 reward = -diff2*reward
                 print("Reward is positive increased!", reward)
             
-            else:
-                reward = reward + (result_en - self.energies[-1])
-                print("Reward is positive!", reward)
-
             done = bool(abs(-0.1024803 - self.energies[-1]) < 1e-05)
             
             return self.agent_pos, reward, done, info
