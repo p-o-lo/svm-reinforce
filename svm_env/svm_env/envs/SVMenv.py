@@ -42,7 +42,7 @@ class svmEnv(gym.Env): # inherit from super class gym (OpenAI)
         return self.agent_pos 
     
     def step(self, action):
-        action = (action + 111.0/109.0)*109.0/2.0 
+        action = (action*10999 + 11001)/200.0
         print("****CALL STEP****")
         print("Action chosen at step: ", action)
         info = {}
@@ -127,7 +127,7 @@ class svmEnv(gym.Env): # inherit from super class gym (OpenAI)
                 reward = -diff2*reward
                 print("Reward is positive increased!", reward)
             
-            done = bool(abs(-0.1024803 - self.energies[-1]) < 1e-06)
+            done = bool(abs(-0.1024803 - self.energies[-1]) < 1e-05)
             
             return self.agent_pos, reward, done, info
         
