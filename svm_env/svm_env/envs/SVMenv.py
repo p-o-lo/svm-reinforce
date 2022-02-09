@@ -74,27 +74,33 @@ class svmEnv(gym.Env): # inherit from super class gym (OpenAI)
             print("The new action: ", action, " makes the energy less than: -0.1026", result_en < -0.1026)
             print("The new action: ", action, " makes the energy nan: ", math.isnan(result_en))
             
-            print("This action IS REMOVED from actions taken and sigmas, the enery is NOT STORED!")
-            self.actions_taken.pop()
-            self.sigmas = open(self.file_sigmas,'w')
-            np.savetxt(self.sigmas, self.actions_taken, fmt="%f")
-            self.sigmas.close()
+            # print("This action IS REMOVED from actions taken and sigmas, the enery is NOT STORED!")
+            # self.actions_taken.pop()
+            # self.sigmas = open(self.file_sigmas,'w')
+            # np.savetxt(self.sigmas, self.actions_taken, fmt="%f")
+            # self.sigmas.close()
             
             reward = -1.0
 
             if math.isnan(result_en):
-                reward = 100*reward
-                self.agent_pos = np.array([self.energies[-1]]).astype(np.float32)
+                reward = 100000*reward
+                self.agent_pos = 1.0e6
+                # self.agent_pos = np.array([self.energies[-1]]).astype(np.float32)
                 print("IS NAN --> Set reward: ", reward)
-                print("IS NAN --> Set agent pos to prev energy: ", self.agent_pos)
+                print("IS NAN --> Set agent pos to a very big energy value: ", self.agent_pos)
+                print("Store the energy got to a very big value!")
+                self.energies.append(self.agent_pos)
         
             elif result_en >= self.energies[-1]:
                 reward = reward - 1000*(result_en - self.energies[-1])
                 print("The energy is greater than previous energy --> Set reward: ", reward)
-                print("This action IS REMOVED from actions taken and sigmas, the energy is NOT STORED!")        
+                print("Store the energy got!")
+                self.energies.append(result_en)
+                # print("This action IS REMOVED from actions taken and sigmas, the energy is NOT STORED!")        
             
             elif result_en < -0.1026:
                 reward = reward + 1000*(self.energies[-1] - result_en)
+                self.energies.append(result_en)
                 print("Is less than target energy --> Set reward: ", reward)
             
             done = False
