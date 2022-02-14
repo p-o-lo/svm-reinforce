@@ -67,11 +67,11 @@ class svmEnv(gym.Env): # inherit from super class gym (OpenAI)
         
         
         if (math.isnan(result_en) or result_en >= 0 or result_en >= self.energies[-1] or \
-            result_en < -0.1026):
+            result_en < -0.151):
             print("The new action: ", action, " makes the energy positive: ", result_en >= 0 )
             print("The new action: ", action, " makes the energy greater than: ", self.energies[-1] \
                   , " the previous one: ", result_en >= self.energies[-1])
-            print("The new action: ", action, " makes the energy less than: -0.1026", result_en < -0.1026)
+            print("The new action: ", action, " makes the energy less than: -0.151", result_en < -0.151)
             print("The new action: ", action, " makes the energy nan: ", math.isnan(result_en))
             
             # print("This action IS REMOVED from actions taken and sigmas, the enery is NOT STORED!")
@@ -98,7 +98,7 @@ class svmEnv(gym.Env): # inherit from super class gym (OpenAI)
                 self.energies.append(result_en)
                 # print("This action IS REMOVED from actions taken and sigmas, the energy is NOT STORED!")        
             
-            elif result_en < -0.1026:
+            elif result_en < -0.151:
                 reward = reward + 1000*(self.energies[-1] - result_en)
                 self.energies.append(result_en)
                 print("Is less than target energy --> Set reward: ", reward)
@@ -134,7 +134,7 @@ class svmEnv(gym.Env): # inherit from super class gym (OpenAI)
                 reward = -diff2*reward
                 print("Reward is positive increased!", reward)
             
-            done = bool(abs(-0.1024803 - self.energies[-1]) < 1e-05)
+            done = bool(abs(-0.1504259 - self.energies[-1]) < 1e-05)
             
             return self.agent_pos, reward, done, info
         
