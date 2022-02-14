@@ -18,7 +18,9 @@ class svmEnv(gym.Env): # inherit from super class gym (OpenAI)
                                        ,dtype=np.float32)
         
         self.observation_space = spaces.Box(low=-np.inf, high=+np.inf, shape=(1,), dtype=np.float32)
-        
+       
+        self.princp_dim = 0
+
         self.actions_taken = []
         self.energies = [0.0]
         self.agent_pos = np.array([0.0]).astype(np.float32)
@@ -65,12 +67,12 @@ class svmEnv(gym.Env): # inherit from super class gym (OpenAI)
             result_en = result[0]
             self.agent_pos = np.array([result_en]).astype(np.float32)
         
-            princp_dim = int(result[1])
+            self.princp_dim = int(result[1])
             full_dim = int(result[2])
-            diff = full_dim - princp_dim 
+            diff = full_dim - self.princp_dim 
 
             print("With this action the energy is: ", result_en)
-            print("With this action the full dim is: ", full_dim, " and princip dim is: ", princp_dim)
+            print("With this action the full dim is: ", full_dim, " and princip dim is: ", self.princp_dim)
         
         
             if (math.isnan(result_en) or result_en >= 0 or result_en >= self.energies[-1] or \
@@ -125,7 +127,7 @@ class svmEnv(gym.Env): # inherit from super class gym (OpenAI)
                 self.energies.append(result_en)
             
                 reward = 1.0
-                reward = princp_dim*(reward - 10*(result_en - self.energies[-2]))
+                reward = self.princp_dim*(reward - 10*(result_en - self.energies[-2]))
                 print("Reward is positive!", reward)
 
                 print("Calculate the diff between dim: ")
