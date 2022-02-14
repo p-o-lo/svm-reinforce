@@ -10,7 +10,7 @@ lengthUnits          1
 npart                3
 masses               1
 kindPotential        GAUSSIAN
-twoBodyParameters    10  -1.1605  
+twoBodyParameters    10.03  -1.227  
 kindSymmetrization   BOSONS
 alphaRanges          0 110 
 # -------------------------------------------------------
