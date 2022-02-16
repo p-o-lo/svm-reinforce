@@ -4,18 +4,18 @@ import gym
 from gym import spaces
 import subprocess
 
-class svmEnv(gym.Env): # inherit from super class gym (OpenAI)
+
+class svmEnv(gym.Env):  # inherit from super class gym (OpenAI)
     
     def __init__(self, n_pairs=3, file_sigmas="./svmCodeSVD/sigmas.dat"):
         
         self.file_sigmas = file_sigmas
-        self.sigmas = open(self.file_sigmas,'w')
+        self.sigmas = open(self.file_sigmas, 'w')
         self.sigmas.truncate(0)
         self.sigmas.close()
         
         self.n_pairs = n_pairs
-        self.action_space = spaces.Box(low=-1., high=1., shape=(n_pairs,)\
-                                       ,dtype=np.float32)
+        self.action_space = spaces.Box(low=-1., high=1., shape=(n_pairs,), dtype=np.float32)
         
         self.observation_space = spaces.Box(low=-np.inf, high=+np.inf, shape=(1,), dtype=np.float32)
        
@@ -28,7 +28,7 @@ class svmEnv(gym.Env): # inherit from super class gym (OpenAI)
         
     def reset(self):
         print("*****CALL RESET******")
-        self.sigmas = open(self.file_sigmas,'w')
+        self.sigmas = open(self.file_sigmas, 'w')
         self.sigmas.truncate(0)
         self.sigmas.close()
         
@@ -44,42 +44,48 @@ class svmEnv(gym.Env): # inherit from super class gym (OpenAI)
         return self.agent_pos 
     
     def step(self, action):
-        action = 55*action +55
-
-        # Triangular condition
+        
         print("****CALL STEP****")
+        action = action*55.0 + 55.0
         print("Action chosen at step: ", action)
-
-        
-        if (action[0] > action[1] + action[2] or action[1] > action[0] + action[2] or action[2] > action[1] + action[0]):
-            
-            print("**** TRIANGULAR INEQUALITY SATISFIED ****")
+       
+        # Triangular condition and non zero condition
+        if ((action[0] == 0.0 or action[1] == 0.0 or action[2] == 0.0) or (action[0] <= action[1] + action[2] and action[1] <= action[2] + action[0] and action[2] <= action[0] + action[1])):
             info = {}
+            done = False
+            reward = -1e6
+            self.agent_pos = np.array([1e6]).astype(np.float32)
+            if (action[0] == 0.0 or action[1] == 0.0 or action[2] == 0.0):
+                print("##### One of the sigmas is 0 ######")
+            if (action[0] <= action[1] + action[2] and action[1] <= action[2] + action[0] and action[2] <= action[0] + action[1]):
+                print("##### Triangular inequality unsatisfied ####")
+            return self.agent_pos, reward, done, info
         
+        else:
+            info = {}
             self.actions_taken.append(action)
-        
+            print('## Basis size (it should be the same of full dim) =  ', len(self.actions_taken))
             self.sigmas = open(self.file_sigmas, 'w')
             np.savetxt(self.sigmas, self.actions_taken, fmt="%f")
             self.sigmas.close()
         
             result = subprocess.check_output(['./svmCodeSVD/svmThree', './svmCodeSVD/remmy.input', self.file_sigmas]).splitlines()
-            result = np.array(result,dtype=float)
+            result = np.array(result, dtype=float)
             result_en = result[0]
             self.agent_pos = np.array([result_en]).astype(np.float32)
         
-            self.princp_dim = int(result[1])
+            princp_dim = int(result[1])
+            self.princp_dim = princp_dim
             full_dim = int(result[2])
-            diff = full_dim - self.princp_dim 
+            diff = full_dim - princp_dim 
 
             print("With this action the energy is: ", result_en)
-            print("With this action the full dim is: ", full_dim, " and princip dim is: ", self.princp_dim)
+            print("With this action the full dim is: ", full_dim, " and princip dim is: ", princp_dim)
         
-        
-            if (math.isnan(result_en) or result_en >= 0 or result_en >= self.energies[-1] or \
-                result_en < -0.151):
-                print("The new action: ", action, " makes the energy positive: ", result_en >= 0 )
-                print("The new action: ", action, " makes the energy greater than: ", self.energies[-1] \
-                  , " the previous one: ", result_en >= self.energies[-1])
+            if (math.isnan(result_en) or result_en >= 0 or 
+                    result_en >= self.energies[-1] or result_en < -0.151):
+                print("The new action: ", action, " makes the energy positive:", result_en >= 0)
+                print("The new action: ", action, " makes the energy greater than:", self.energies[-1], " the previous one: ", result_en >= self.energies[-1])
                 print("The new action: ", action, " makes the energy less than: -0.151", result_en < -0.151)
                 print("The new action: ", action, " makes the energy nan: ", math.isnan(result_en))
             
@@ -98,7 +104,7 @@ class svmEnv(gym.Env): # inherit from super class gym (OpenAI)
                     print("IS NAN --> Set reward: ", reward)
                     print("IS NAN --> Set agent pos to a very big energy value: ", self.agent_pos)
                     print("Store the energy got to a very big value!")
-                    self.energies.append(self.agent_pos)
+                    self.energies.append(1e6)
         
                 elif result_en >= self.energies[-1]:
                     reward = reward - 1000*(result_en - self.energies[-1])
@@ -112,22 +118,18 @@ class svmEnv(gym.Env): # inherit from super class gym (OpenAI)
                     self.energies.append(result_en)
                     print("Is less than target energy --> Set reward: ", reward)
             
-                done = False
+                done = bool(abs(-0.1504259 - self.energies[-1]) < 1e-05)
                 
                 return self.agent_pos, reward, done, info
             
             else: 
-                print("The new action: ", action, " makes the energy positive: ", result_en >= 0 )
-                print("The new action: ", action, " makes the energy greater than: ", self.energies[-1] \
-                  , " the previous one: ", result_en >= self.energies[-1])
-            
-                print("This action is NOT REMOVED from actions taken and sigmas, the energy is STORED!")
-            
+                print("The new action: ", action, " makes the energy positive:", result_en >= 0)
+                print("The new action: ", action, " makes the energy greater than: ", self.energies[-1], " the previous one: ", result_en >= self.energies[-1])
                 print("Store the energy got!")
                 self.energies.append(result_en)
             
                 reward = 1.0
-                reward = self.princp_dim*(reward - 10*(result_en - self.energies[-2]))
+                reward = princp_dim*(reward - 10*(result_en - self.energies[-2]))
                 print("Reward is positive!", reward)
 
                 print("Calculate the diff between dim: ")
@@ -148,14 +150,6 @@ class svmEnv(gym.Env): # inherit from super class gym (OpenAI)
             
                 return self.agent_pos, reward, done, info
 
-        else:
-            print("Triangular inequality not satisfied!")
-            self.agent_pos = np.array([1e6]).astype(np.float32)
-            reward = -1e6
-            done = False
-            info = {}
-            return self.agent_pos, reward, done, info
-        
     def render(self, mode='console'):
         if mode != 'console':
             raise NotImplementedError()
