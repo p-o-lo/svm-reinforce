@@ -53,8 +53,8 @@ class svmEnv(gym.Env):  # inherit from super class gym (OpenAI)
         if (action[0] == 0.0 or action[1] == 0.0 or action[2] == 0.0) or (action[0] <= action[1] + action[2] and action[1] <= action[0] + action[2] and action[2] <= action[1] + action[0]):
             print('**** ILLEGAL ACTION ****')
             reward = -10.0
-            self.agent_pos = np.array([self.energies[-1]]).astype(np.float32) 
-
+            self.agent_pos = np.array([self.energies[-1]]).astype(np.float32)
+            return self.agent_pos, reward, done, info
 
         else:
             self.actions_taken.append(action)
