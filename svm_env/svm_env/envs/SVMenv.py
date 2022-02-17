@@ -42,27 +42,21 @@ class svmEnv(gym.Env):  # inherit from super class gym (OpenAI)
         print("Energies got at reset: ", self.energies)
         
         return self.agent_pos 
-    
+
     def step(self, action):
-        
+        action = action*55.0 + 55.0  
         print("****CALL STEP****")
-        action = action*55.0 + 55.0
         print("Action chosen at step: ", action)
        
-        # Triangular condition and non zero condition
-        if ((action[0] == 0.0 or action[1] == 0.0 or action[2] == 0.0) or (action[0] <= action[1] + action[2] and action[1] <= action[2] + action[0] and action[2] <= action[0] + action[1])):
-            info = {}
-            done = False
-            reward = -1e6
-            self.agent_pos = np.array([1e6]).astype(np.float32)
-            if (action[0] == 0.0 or action[1] == 0.0 or action[2] == 0.0):
-                print("##### One of the sigmas is 0 ######")
-            if (action[0] <= action[1] + action[2] and action[1] <= action[2] + action[0] and action[2] <= action[0] + action[1]):
-                print("##### Triangular inequality unsatisfied ####")
-            return self.agent_pos, reward, done, info
-        
+        info = {}
+        done = False    
+        if (action[0] == 0.0 or action[1] == 0.0 or action[2] == 0.0) or (action[0] <= action[1] + action[2] and action[1] <= action[0] + action[2] and action[2] <= action[1] + action[0]):
+            print('**** ILLEGAL ACTION ****')
+            reward = -10.0
+            self.agent_pos = np.array([self.energies[-1]]).astype(np.float32) 
+
+
         else:
-            info = {}
             self.actions_taken.append(action)
             print('## Basis size (it should be the same of full dim) =  ', len(self.actions_taken))
             self.sigmas = open(self.file_sigmas, 'w')
@@ -79,57 +73,59 @@ class svmEnv(gym.Env):  # inherit from super class gym (OpenAI)
             full_dim = int(result[2])
             diff = full_dim - princp_dim 
 
+            # reward = -10.0
+            # self.agent_pos = np.array([self.energies[-1]]).astype(np.float32)
+            # print("This action IS REMOVED from actions taken and sigmas, the enery is NOT STORED!")
+            # self.actions_taken.pop()
+            # self.sigmas = open(self.file_sigmas, 'w')
+            # np.savetxt(self.sigmas, self.actions_taken, fmt="%f")
+            # self.sigmas.close()
+
             print("With this action the energy is: ", result_en)
             print("With this action the full dim is: ", full_dim, " and princip dim is: ", princp_dim)
         
-            if (math.isnan(result_en) or result_en >= 0 or 
-                    result_en >= self.energies[-1] or result_en < -0.151):
-                print("The new action: ", action, " makes the energy positive:", result_en >= 0)
+            if (math.isnan(result_en) or result_en >= self.energies[-1] or result_en <= -0.151):
                 print("The new action: ", action, " makes the energy greater than:", self.energies[-1], " the previous one: ", result_en >= self.energies[-1])
-                print("The new action: ", action, " makes the energy less than: -0.151", result_en < -0.151)
+                print("The new action: ", action, " makes the energy less than: -0.151", result_en <= -0.151)
                 print("The new action: ", action, " makes the energy nan: ", math.isnan(result_en))
-            
-                # print("This action IS REMOVED from actions taken and sigmas, the enery is NOT STORED!")
-                # self.actions_taken.pop()
-                # self.sigmas = open(self.file_sigmas,'w')
-                # np.savetxt(self.sigmas, self.actions_taken, fmt="%f")
-                # self.sigmas.close()
             
                 reward = -1.0
 
                 if math.isnan(result_en):
-                    reward = -1e6
-                    self.agent_pos = np.array([1e6]).astype(np.float32)
-                    # self.agent_pos = np.array([self.energies[-1]]).astype(np.float32)
+                    reward = -10.0
+                    self.agent_pos = np.array([self.energies[-1]]).astype(np.float32)
                     print("IS NAN --> Set reward: ", reward)
-                    print("IS NAN --> Set agent pos to a very big energy value: ", self.agent_pos)
-                    print("Store the energy got to a very big value!")
-                    self.energies.append(1e6)
-        
+                    print("IS NAN --> Set agent pos to previoius energy value:", self.agent_pos)
+                    print("This action IS REMOVED from actions taken and sigmas, the energy is NOT STORED!")
+                    self.actions_taken.pop()
+                    self.sigmas = open(self.file_sigmas, 'w')
+                    np.savetxt(self.sigmas, self.actions_taken, fmt="%f")
+                    self.sigmas.close()
+
                 elif result_en >= self.energies[-1]:
-                    reward = reward - 1000*(result_en - self.energies[-1])
+                    reward = reward - 10.0*(result_en - self.energies[-1])
                     print("The energy is greater than previous energy --> Set reward: ", reward)
                     print("Store the energy got!")
                     self.energies.append(result_en)
-                    # print("This action IS REMOVED from actions taken and sigmas, the energy is NOT STORED!")        
             
                 elif result_en < -0.151:
-                    reward = reward + 1000*(self.energies[-1] - result_en)
+                    reward = reward + 10.0*(self.energies[-1] - result_en)
                     self.energies.append(result_en)
                     print("Is less than target energy --> Set reward: ", reward)
             
-                done = bool(abs(-0.1504259 - self.energies[-1]) < 1e-05)
-                
+                if bool(abs(-0.1504259 - result_en) < 1e-05):
+                    reward = princp_dim*1.5
+                    done = True
+                            
                 return self.agent_pos, reward, done, info
             
             else: 
-                print("The new action: ", action, " makes the energy positive:", result_en >= 0)
                 print("The new action: ", action, " makes the energy greater than: ", self.energies[-1], " the previous one: ", result_en >= self.energies[-1])
                 print("Store the energy got!")
                 self.energies.append(result_en)
             
                 reward = 1.0
-                reward = princp_dim*(reward - 10*(result_en - self.energies[-2]))
+                reward = princp_dim*(reward - 10.0*(result_en - self.energies[-2]))
                 print("Reward is positive!", reward)
 
                 print("Calculate the diff between dim: ")
@@ -138,17 +134,19 @@ class svmEnv(gym.Env):  # inherit from super class gym (OpenAI)
                 print("Diff 2: ", diff2)
             
                 if (diff2 > 0):
-                    print("Add a PENALTY on the rewards!!")
-                    reward = -0.1*diff2*reward
+                    print("Add a small PENALTY on the rewards!!")
+                    reward = -0.2*diff2*reward
                     print("Reward is slightly negative!", reward)
                 if (diff2 < 0):
                     print("INCREASE the reward")
                     reward = -diff2*reward
                     print("Reward is positive increased!", reward)
             
-                done = bool(abs(-0.1504259 - self.energies[-1]) < 1e-05)
+                if bool(abs(-0.1504259 - self.energies[-1]) < 1e-05):
+                    reward = princp_dim*1.5
+                    done = True
             
-                return self.agent_pos, reward, done, info
+            return self.agent_pos, reward, done, info
 
     def render(self, mode='console'):
         if mode != 'console':
