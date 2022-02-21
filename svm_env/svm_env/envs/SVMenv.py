@@ -41,7 +41,7 @@ class svmEnv(gym.Env):  # inherit from super class gym (OpenAI)
         return self.agent_pos
 
     def step(self, action):
-        # action = action*55.0 + 55.0
+        action = action*55.0 + 55.0
         print('#### CALL STEP ####')
         print('Action chosen at step: ', action)
 
@@ -136,7 +136,7 @@ class svmEnv(gym.Env):  # inherit from super class gym (OpenAI)
 
                     if (diff2 > 0):
                         print('Add a small PENALTY on the rewards!!')
-                        reward = -0.2*diff2*reward
+                        reward = -0.5 - 1./princp_dim 
                         print('Reward is slightly negative: ', reward)
                     if (diff2 < 0):
                         print('INCREASE the reward')
