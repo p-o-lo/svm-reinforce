@@ -139,7 +139,7 @@ class svmEnv(gym.Env):  # inherit from super class gym (OpenAI)
 
                     if (diff2 > 0):
                         print('Add a small PENALTY on the rewards!!')
-                        reward = -0.5 - 1./princp_dim
+                        reward = -0.03*diff2*princp_dim
                         print('Reward is slightly negative: ', reward)
                     if (diff2 < 0):
                         print('INCREASE the reward')
