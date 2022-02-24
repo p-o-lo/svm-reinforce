@@ -55,7 +55,7 @@ class svmEnv(gym.Env):  # inherit from super class gym (OpenAI)
             reward = 1.5*self.princp_dim
             return self.agent_pos, reward, done, info
 
-        if (action[0] == 0.0 or action[1] == 0.0 or action[2] == 0.0) or (action[0] >= action[1] + action[2] and action[1] >= action[0] + action[2] and action[2] >= action[1] + action[0]):
+        if (action[0] == 0.0 or action[1] == 0.0 or action[2] == 0.0)
             reward = -10.0
             print('**** ILLEGAL ACTION **** --> Set reward:', reward)
             print('This action IS REMOVED from actions taken and sigmas, the energy is NOT STORED!')
@@ -70,7 +70,7 @@ class svmEnv(gym.Env):  # inherit from super class gym (OpenAI)
             self.sigmas.close()
 
             try:
-                result = subprocess.check_output(['./svmCodeSVD/svmThree', './svmCodeSVD/remmy.input', self.file_sigmas]).splitlines()
+                result = subprocess.check_output(['./svmCodeSVD/svmThree', './svmCodeSVD/run_svm.input', self.file_sigmas]).splitlines()
             except subprocess.CalledProcessError:
                 reward = -10.0
                 print('**** WITH THIS ACTION THE SVM CODE RISE A CORE DUMP ERROR **** --> Set reward: ', reward)
