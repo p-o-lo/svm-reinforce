@@ -1,0 +1,17 @@
+# ------------------------------------------------------- 
+# Input data for SVM - Trimer 4He3
+# PRA 84, 052503 (2011)
+# ------------------------------------------------------- 
+dataFile             check_energy 
+sizeBasis            1000
+angularMomentum      0
+energyUnits          43.281307
+lengthUnits          1
+npart                3
+masses               1
+kindPotential        GAUSSIAN
+twoBodyParameters    10.03  -1.227  
+kindSymmetrization   BOSONS
+alphaRanges          0 110 
+# -------------------------------------------------------
+% END OF FILE

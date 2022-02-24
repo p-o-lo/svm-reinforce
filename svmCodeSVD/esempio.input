@@ -1,0 +1,128 @@
+# ------------------------------------------------------- 
+# Input data for SVM - Trimer 4He3
+# PRA 84, 052503 (2011)
+# Just to compare with the article, the R of the 3body
+# must be multiplied by sqrt(3/4)
+# ------------------------------------------------------- 
+dataFile             dataFile
+sizeBasis            5000
+angularMomentum      0
+energyUnits          43.281307
+lengthUnits          1
+npart                3
+masses               1 
+kindPotential        GAUSSIAN
+twoBodyParameters    -1.227  10.03
+ifThreeBody          1 
+kindSymmetrization   BOSONS
+kindThreeBody        HYPERRADIUS
+threeBodyParameters  0.422 12.124 
+alphaRanges          0 60 0 500
+# ------------------------------------------------------- 
+% END OF FILE
+# ------------------------------------------------------- 
+# Input data for SVM   - TABLE III PRC 2019
+# -------------------------------------------------------
+dataFile             realGaussiano
+sizeBasis            2000
+angularMomentum      0
+totalSpin            0.5
+totalIsospin         0.5
+ifCoulomb            1
+energyUnits          41.47
+lengthUnits          1
+npart                3
+masses               1
+kindPotential        REALGAUSSIAN
+twoBodyParameters    0  0  -37.9  1.65 -60.575  1.65  0  0
+ifThreeBody          1
+kindThreeBody        HYPERRADIUS
+threeBodyParameters  7.6044 3.035
+kindSymmetrization   FERMIONS
+alphaRanges          0  7
+# ------------------------------------------------------- 
+% END OF FILE
+# ------------------------------------------------------- 
+# Input data for SVM  - Trimer 4He2-3He  
+# https://doi.org/10.1088/0953-4075/31/18/008
+# My result E = 18.9 mK r~22.5 au
+# ------------------------------------------------------- 
+dataFile            masseDiverse
+sizeBasis           200
+angularMomentum      0
+energyUnits          43.27883
+lengthUnits          1
+npart                3
+masses               1 1 0.7535161 
+kindPotential        GAUSSIAN
+twoBodyParameters    -1.227 10.03
+twoBodyParameters    -0.8925 10.55
+alphaRanges          0 100
+# alphaRanges          0 120
+# ------------------------------------------------------- 
+% END OF FILE
+# ------------------------------------------------------- 
+# Input data for SVM - Minnesota
+# ------------------------------------------------------- 
+dataFile             dataFile
+sizeBasis            5000
+totalSpin            0.5
+totalIsospin         0.5
+ifCoulomb            0
+ifThreeBody          0
+angularMomentum      0
+energyUnits          41.47
+lengthUnits          1
+npart                3
+masses               1 
+kindPotential        MINNESOTA
+kindSymmetrization   FERMIONS
+twoBodyParameters    1 1  
+kindThreeBody        TWOSIDES
+threeBodyParameters  2 1  
+alphaRanges          0 15
+# ------------------------------------------------------- 
+% END OF FILE
+# ------------------------------------------------------- 
+# Input data for SVM -  Gaussian with spin and isospin
+# ------------------------------------------------------- 
+dataFile             dataFile
+sizeBasis            5000
+angularMomentum      0
+totalSpin            0.5
+totalIsospin         0.5
+ifCoulomb            0 
+energyUnits          41.47
+lengthUnits          1
+npart                3
+masses               1 
+kindPotential        REALGAUSSIAN
+# Test con tutti i parametri uguali, come una sola gaussiana
+# twoBodyParameters    -1.91945985049433 1.4 -1.91945985049433 1.4 -1.91945985049433 1.4 -1.91945985049433 1.4 
+# twoBodyParameters    0 0 -1.28418133590547 1.4 -1.91945985049433 1.4 0 0
+twoBodyParameters    0 0 -0.913913672534362 1.65  -1.46069447793586 1.65 0 0
+# twoBodyParameters    0 0 -0.736577887629612 1.831  -1.60555769471907 1.5579  0 0
+ifThreeBody          1
+# kindThreeBody        TWOSIDES
+# threeBodyParameters  0.125204699782976 1.6
+kindThreeBody        HYPERRADIUS
+threeBodyParameters  0.0673900168796721 6.18496160052752
+# threeBodyParameters  0.08385 5.00
+alphaRanges          0  6
+# ------------------------------------------------------- 
+% END OF FILE
+# ------------------------------------------------------- 
+# Input data for SVM - Volkov 
+# ------------------------------------------------------- 
+dataFile             dataFile
+sizeBasis            800
+angularMomentum      0
+energyUnits          61.6745984533016
+lengthUnits          0.82
+npart                3
+masses               1 
+kindPotential        VOLKOV
+twoBodyParameters    2.34877897275139  1  -1.35128565227876 1.95121951219512  
+alphaRanges          0 10 0 70
+# ------------------------------------------------------- 
+% END OF FILE
