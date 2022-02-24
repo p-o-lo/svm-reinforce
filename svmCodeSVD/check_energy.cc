@@ -47,7 +47,7 @@ int main(int argc, char ** argv)
 
   //std::string baseName = inData.dataFile;
 
-  std::string baseName = "test";
+  std::string baseName = "check_energy";
   
   std::string inputName = baseName + ".input";
   struct stat buffer;
