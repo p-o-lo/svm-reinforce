@@ -55,7 +55,7 @@ class svmEnv(gym.Env):  # inherit from super class gym (OpenAI)
             reward = 1.5*self.princp_dim
             return self.agent_pos, reward, done, info
 
-        if (action[0] == 0.0 or action[1] == 0.0 or action[2] == 0.0)
+        if (action[0] == 0.0 or action[1] == 0.0 or action[2] == 0.0):
             reward = -10.0
             print('**** ILLEGAL ACTION **** --> Set reward:', reward)
             print('This action IS REMOVED from actions taken and sigmas, the energy is NOT STORED!')
