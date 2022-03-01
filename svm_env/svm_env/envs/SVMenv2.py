@@ -4,7 +4,7 @@ import gym
 from gym import spaces
 import subprocess
 
-class svmEnv(gym.Env): # inherit from super class gym (OpenAI)
+class svmEnv2(gym.Env): # inherit from super class gym (OpenAI)
     
     def __init__(self, n_pairs=3, n_basis = 200, file_sigmas="./svmCodeSVD/sigmas.dat"):
         

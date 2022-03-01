@@ -5,8 +5,8 @@ from gym import spaces
 import subprocess
 
 
-class svmEnv(gym.Env):  # inherit from super class gym (OpenAI)
-    def __init__(self, n_pairs=3, file_sigmas='./svmCodeSVD/sigmas.dat'):
+class svmEnv1(gym.Env):  # inherit from super class gym (OpenAI)
+    def __init__(self, n_pairs=3, file_sigmas='./svmCodeSVD/sigmas1.dat'):
 
         self.file_sigmas = file_sigmas
         self.sigmas = open(self.file_sigmas, 'w')
@@ -49,11 +49,7 @@ class svmEnv(gym.Env):  # inherit from super class gym (OpenAI)
         print('Action chosen at step: ', action)
 
         info = {}
-        done = bool(abs(-0.1504259 - self.energies[-1]) < 1e-05)
-
-        if done:
-            reward = 1.5*self.princp_dim
-            return self.agent_pos, reward, done, info
+        done = bool(abs(-0.1504259 - self.energies[-1]) < 1e-06)
 
         if (action[0] == 0.0 or action[1] == 0.0 or action[2] == 0.0):
             reward = -10.0
@@ -90,7 +86,6 @@ class svmEnv(gym.Env):  # inherit from super class gym (OpenAI)
                 princp_dim = int(result[1])
                 self.princp_dim = princp_dim
                 full_dim = int(result[2])
-                diff = full_dim - princp_dim
 
                 # reward = -10.0
                 # self.agent_pos = np.array([self.energies[-1]]).astype(np.float32)
@@ -113,41 +108,14 @@ class svmEnv(gym.Env):  # inherit from super class gym (OpenAI)
                     np.savetxt(self.sigmas, self.actions_taken, fmt="%f")
                     self.sigmas.close()
 
-                elif result_en >= self.energies[-1]:
-                    reward = -1.0 - 10.0*(result_en - self.energies[-1])
-                    print('#### THE ENERGY IS GREATER THEN THE PREVIOUS ONE #### --> Set reward: ', reward)
-                    print("Store the energy got and sigmas!")
-                    self.energies.append(result_en)
-
-                elif result_en < -0.151:
-                    reward = -1.0 + 10.0*(self.energies[-1] - result_en)
-                    self.energies.append(result_en)
-                    print(' #### THE ENERGY IS LESS THEN THE ENERGY TARGET #### --> Set reward: ', reward)
-
                 else:
                     print('#### THE ACTION IS A GOOD ONE #### --> Store the energy got!')
                     self.energies.append(result_en)
 
-                    reward = 1.0
-                    reward = princp_dim*(reward - 10.0*(result_en - self.energies[-2]))
-                    print('Reward is positive!', reward)
-
-                    print('Calculate the diff between dim: ')
-                    self.diff_dim.append(diff)
-                    diff2 = self.diff_dim[-1] - self.diff_dim[-2]
-                    print('Diff 2 is: ', diff2)
-
-                    if (diff2 > 0):
-                        print('Add a small PENALTY on the rewards!!')
-                        reward = -0.03*diff2*princp_dim
-                        print('Reward is slightly negative: ', reward)
-                    if (diff2 < 0):
-                        print('INCREASE the reward')
-                        reward = -diff2*reward
-                        print('Reward is positive increased: ', reward)
+                    reward = -80.0*abs(result_en + 0.1504259)/1.1504259 + 10.0
+                    print('Reward is ', reward)
 
                 return self.agent_pos, reward, done, info
-            print('####### THE REWARD AT ', self.i_step, ' IS ', reward, ' #########')
 
     def render(self, mode='console'):
         if mode != 'console':
