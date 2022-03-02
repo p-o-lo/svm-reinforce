@@ -29,7 +29,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 class Agent():
     """Interacts with and learns from the environment."""
 
-    def __init__(self, state_size, action_size, seed, memory,
+    def __init__(self, state_size, action_size, seed, 
                     BOOTSTRAP_SIZE=BOOTSTRAP_SIZE,
                     GAMMA=GAMMA,
                     TAU=TAU,
@@ -78,7 +78,7 @@ class Agent():
         self.noise = None
 
         # Replay memory
-        self.memory = memory
+        self.memory = ReplayBuffer(action_size, BUFFER_SIZE, BATCH_SIZE, seed)
         # Initialize time steps (for updating every UPDATE_EVERY steps)
         self.u_step = 0
         self.n_step = 0
