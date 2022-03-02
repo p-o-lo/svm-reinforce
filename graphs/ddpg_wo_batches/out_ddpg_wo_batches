@@ -1,0 +1,16 @@
+#######################################################################
+### Output of the first episodes of SVM RL with a single ddpg agent ###
+## Hyperparameters
+## gamma = 1.0
+## tau = 0.001
+## lr_act = lr_cr = 0.0001
+## batch_size = 1
+## num_update = 1
+## update_every = 4
+#######################################################################
+
+
+# Episode n.	score	energy_reached	princip_dim
+	1			823.2	-0.141485		149
+	2			2342.8	-0.134047		75
+	3			64.9	-0.022535		58
