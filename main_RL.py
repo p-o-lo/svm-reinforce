@@ -5,7 +5,7 @@ import torch
 from ddpg_agent import Agent
 
 
-env = gym.make('svm_env:svmEnv-v0', file_sigmas="./svmCodeSVD/sigmas.dat")
+env = gym.make('svm_env:svmEnv-v1', file_sigmas="./svmCodeSVD/sigmas1.dat")
 # Instance of the ddpg agent
 agent = Agent(1, 3, random_seed=2)
 

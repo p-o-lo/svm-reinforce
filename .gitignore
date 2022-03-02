@@ -4,4 +4,8 @@ svm_env/svm_env/__pycache__/*
 svm_env/svm_env/envs/__pycache__/*
 .ipynb_checkpoints/*
 *.swp
+svmCodeSVD/svmThree
+svmCodeEV/svmThree
+svmCodeSVD/*.o
+svmCodeEV/*.o
 *~
