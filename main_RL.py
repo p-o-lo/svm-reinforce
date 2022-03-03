@@ -7,7 +7,7 @@ from ddpg_agent import Agent
 
 env = gym.make('svm_env:svmEnv-v1', file_sigmas="./svmCodeSVD/sigmas1.dat")
 # Instance of the ddpg agent
-agent = Agent(1, 3, random_seed=2)
+agent = Agent(state_size = 1, action_size = 3, seed=2)
 
 
 # Save all rewards, energies and princip dims in files during training
@@ -15,17 +15,17 @@ def save_all(agent, rewards, energies, princip_dims):
     torch.save(agent.actor_local.state_dict(), 'checkpoint_actor.pth')
     torch.save(agent.critic_local.state_dict(), 'checkpoint_critic.pth')
 
-    name_rewards = 'rewards_RL_0.out'
+    name_rewards = 'rewards_RL_1.out'
     file_rewards = open(name_rewards, 'w')
     np.savetxt(file_rewards, rewards, fmt='%f')
     file_rewards.close()
 
-    name_energies = 'energies_RL_0.out'
+    name_energies = 'energies_RL_1.out'
     file_energies = open(name_energies, 'w')
     np.savetxt(file_energies, energies, fmt='%f')
     file_energies.close()
 
-    name_dim = 'princip_dims_RL_0.out'
+    name_dim = 'princip_dims_RL_1.out'
     file_dim = open(name_dim, 'w')
     np.savetxt(file_dim, princip_dims, fmt='%f')
     file_dim.close()
