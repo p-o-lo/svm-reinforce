@@ -1,7 +1,6 @@
 import numpy as np
 import random
 import copy
-import time
 from collections import namedtuple, deque
 
 from actor_critic_model import Actor, Critic
