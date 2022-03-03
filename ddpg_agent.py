@@ -28,17 +28,17 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 class Agent():
     """Interacts with and learns from the environment."""
 
-    def __init__(self, state_size, action_size, seed, 
-                    BOOTSTRAP_SIZE=BOOTSTRAP_SIZE,
-                    GAMMA=GAMMA,
-                    TAU=TAU,
-                    LR_ACTOR=LR_ACTOR,
-                    LR_CRITIC=LR_CRITIC,
-                    UPDATE_EVERY=UPDATE_EVERY,
-                    TRANSFER_EVERY=TRANSFER_EVERY,
-                    NUM_UPDATE=NUM_UPDATE,
-                    ADD_NOISE_EVERY=ADD_NOISE_EVERY,
-                    WEIGHT_DECAY=WEIGHT_DECAY):
+    def __init__(self, state_size, action_size, seed,
+            BOOTSTRAP_SIZE=BOOTSTRAP_SIZE,
+            GAMMA=GAMMA,
+            TAU=TAU,
+            LR_ACTOR=LR_ACTOR,
+            LR_CRITIC=LR_CRITIC,
+            UPDATE_EVERY=UPDATE_EVERY,
+            TRANSFER_EVERY=TRANSFER_EVERY,
+            NUM_UPDATE=NUM_UPDATE,
+            ADD_NOISE_EVERY=ADD_NOISE_EVERY,
+            WEIGHT_DECAY=WEIGHT_DECAY):
         """Initialize an Agent object.
         Params
         ======
@@ -77,7 +77,7 @@ class Agent():
         self.noise = None
 
         # Replay memory
-        self.memory = ReplayBuffer(action_size, BUFFER_SIZE, BATCH_SIZE, seed)
+        self.memory = ReplayBuffer(action_size, device, BUFFER_SIZE, BATCH_SIZE, seed)
         # Initialize time steps (for updating every UPDATE_EVERY steps)
         self.u_step = 0
         self.n_step = 0
@@ -119,7 +119,7 @@ class Agent():
         with torch.no_grad():
             if add_noise and self.noise and self.n_step == 0:
                 self.actor_local.eval()
-                state = torch.from_numpy(state).float().unsqueeze(0).to(self.device)
+                state = torch.from_numpy(state).float().unsqueeze(0).to(device)
                 to_add = self.noise.apply(self.actor_local, state)
                 if ret is None:
                     ret = to_add
@@ -128,14 +128,14 @@ class Agent():
                 self.actor_local.train()
             else:
                 self.actor_local.eval()
-                state = torch.from_numpy(state).float().unsqueeze(0).to(self.device)
+                state = torch.from_numpy(state).float().unsqueeze(0).to(device)
                 to_add = self.actor_local(state).cpu().data.numpy()
                 if ret is None:
                     ret = to_add
                 else:
                     ret = np.concatenate((ret, to_add))
                 self.actor_local.train()
-        return ret
+        return np.squeeze(ret)
 
     def step(self, state, action, reward, next_state, done):
         # Save experience in replay memory
@@ -189,7 +189,7 @@ class Agent():
         (-mean).backward()
         self.actor_optim.step()
 
-    def soft_update(local_model, target_model, tau):
+    def soft_update(self, local_model, target_model, tau):
         """Soft update model parameters.
         θ_target = τ*θ_local + (1 - τ)*θ_target
         θ_target = θ_target + τ*(θ_local - θ_target)
@@ -313,3 +313,7 @@ class ReplayBuffer:
         next_states = torch.from_numpy(np.vstack([e.next_state for e in experiences if e is not None])).float().to(self.device).requires_grad_(False)
         dones = torch.from_numpy(np.vstack([e.done for e in experiences if e is not None]).astype(np.uint8)).float().to(self.device).requires_grad_(False)
         return (states, actions, rewards, next_states, dones)
+
+    def __len__(self):
+        """Return the current size of internal memory."""
+        return len(self.memory)
