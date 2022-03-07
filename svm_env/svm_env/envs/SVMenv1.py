@@ -49,7 +49,7 @@ class svmEnv1(gym.Env):  # inherit from super class gym (OpenAI)
         print('Action chosen at step: ', action)
 
         info = {}
-        done = bool(abs(-0.1504259 - self.energies[-1]) < 1e-06)
+        done = bool(abs(-0.1504259 - self.energies[-1]) < 1e-05)
 
         if (action[0] == 0.0 or action[1] == 0.0 or action[2] == 0.0):
             reward = -10.0
