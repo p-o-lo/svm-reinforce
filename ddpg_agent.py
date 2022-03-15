@@ -30,6 +30,8 @@ class DDPG_agent():
     """Interacts with and learns from the environment."""
 
     def __init__(self, state_size, action_size, seed,
+                name='DDPG',
+                batch_size=BATCH_SIZE,
                 bootstrap_size=BOOTSTRAP_SIZE,
                 gamma=GAMMA,
                 tau=TAU,
@@ -58,7 +60,9 @@ class DDPG_agent():
             add_noise_every: how often to add noise to favor exploration
             weight_decay: decay of network parameters
         """
+        self.name = name
         self.seed = random.seed(seed)
+        self.batch_size = batch_size
         self.bootstrap_size = bootstrap_size
         self.gamma = gamma
         self.tau = tau
@@ -93,7 +97,7 @@ class DDPG_agent():
         self.noise = OUNoise(action_size, seed)
 
         # Replay memory
-        self.memory = ReplayBuffer(action_size, BUFFER_SIZE, BATCH_SIZE, seed)
+        self.memory = ReplayBuffer(action_size, BUFFER_SIZE, batch_size, seed)
 
         # Initialize time steps (for updating every UPDATE_EVERY steps)
         self.u_step = 0
@@ -131,7 +135,7 @@ class DDPG_agent():
         # Learn every UPDATE_EVERY time steps from a memory of size BATCH_SIZE.
         # Transfer parameters every TRANSFER EVERY
         self.u_step = (self.u_step + 1) % self.update_every
-        if len(self.memory) > BATCH_SIZE and self.u_step == 0:
+        if len(self.memory) > self.batch_size and self.u_step == 0:
             t_step = 0
             for _ in range(self.num_update):
                 self.learn()
@@ -201,7 +205,8 @@ class OUNoise:
     def sample(self):
         """Update internal state and return it as a noise sample."""
         x = self.state
-        dx = self.theta * (self.mu - x) + self.sigma * np.array([random.random() for i in range(len(x))])
+        dx = self.theta * (self.mu - x) + self.sigma * np.random.standard_normal(self.size)
+        # np.array([random.random() for i in range(len(x))])
         # np.random.standard_normal(self.size)
         self.state = x + dx
         return self.state
