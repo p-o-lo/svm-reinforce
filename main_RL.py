@@ -63,8 +63,11 @@ def save_all(dat_file, i_ep, sigmas_i_ep, rew_i_ep, en_i_ep, pri_dim_i_ep, act_m
         dat_file['critic_models'][f'cri_mod_{i_ep}'].attrs.create(name=k, data=critic_model[k].numpy())
 
 
-def close_file(dat_file):
+def close_file(dat_file, actor_model_file, critic_model_file, file_sigmas):
     dat_file.close()
+    os.remove(actor_model_file)
+    os.remove(critic_model_file)
+    os.remove(file_sigmas)
 
 
 # Env declaration
@@ -108,5 +111,5 @@ def run_ddpg(max_t_step=250, n_episodes=400):
 
         print('Episode {} ... Score: {:.3f}'.format(i_ep, np.sum(rew_i_ep)))
 
-    close_file(dat_file)
+    close_file(dat_file, 'checkpoint_actor.pth', 'checkpoint_critic.pth', env.file_sigmas)
     return dat_file
