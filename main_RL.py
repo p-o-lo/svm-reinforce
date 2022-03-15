@@ -45,10 +45,10 @@ def create_info_h5(agent, env):
 
 def save_all(dat_file, i_ep, sigmas_i_ep, rew_i_ep, en_i_ep, pri_dim_i_ep, act_model_i_ep, cr_model_i_ep):
     # Create datasets for rewards, energies, pri dim and store data in it
-    dat_file.create_dataset(f'sigmas_ep{i_ep}', dtype='f', data=sigmas_i_ep)
-    dat_file.create_dataset(f'rew_ep_{i_ep}', dtype='f', data=rew_i_ep)
-    dat_file.create_dataset(f'en_ep_{i_ep}', dtype='f', data=en_i_ep)
-    dat_file.create_dataset(f'pri_dim_ep_{i_ep}', dtype='i', data=pri_dim_i_ep)
+    dat_file['sigmas'].create_dataset(f'sigmas_ep_{i_ep}', dtype='f', data=sigmas_i_ep)
+    dat_file['rewards'].create_dataset(f'rew_ep_{i_ep}', dtype='f', data=rew_i_ep)
+    dat_file['energies'].create_dataset(f'en_ep_{i_ep}', dtype='f', data=en_i_ep)
+    dat_file['princip_dims'].create_dataset(f'pri_dim_ep_{i_ep}', dtype='i', data=pri_dim_i_ep)
 
     # Store in actor models group the network params at each ep
     actor_model = torch.load(act_model_i_ep)
