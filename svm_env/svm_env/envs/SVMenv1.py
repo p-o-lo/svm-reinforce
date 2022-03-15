@@ -49,13 +49,14 @@ class svmEnv1(gym.Env):  # inherit from super class gym (OpenAI)
         print('Action chosen at step: ', action)
 
         info = {}
-        done = bool(abs(-0.1504259 - self.energies[-1]) < 1e-05)
+        done = bool(abs(-0.1504259 - self.energies[-1]) < 1e-04)
 
         if (action[0] == 0.0 or action[1] == 0.0 or action[2] == 0.0):
             reward = -10.0
             print('**** ILLEGAL ACTION **** --> Set reward:', reward)
             print('This action IS REMOVED from actions taken and sigmas, the energy is NOT STORED!')
             self.agent_pos = np.array([self.energies[-1]]).astype(np.float32)
+            done = bool(abs(-0.1504259 - self.energies[-1]) < 1e-04)
             return self.agent_pos, reward, done, info
 
         else:
@@ -76,6 +77,7 @@ class svmEnv1(gym.Env):  # inherit from super class gym (OpenAI)
                 self.sigmas = open(self.file_sigmas, 'w')
                 np.savetxt(self.sigmas, self.actions_taken, fmt='%f')
                 self.sigmas.close()
+                done = bool(abs(-0.1504259 - self.energies[-1]) < 1e-04)
                 return self.agent_pos, reward, done, info
 
             else:
@@ -86,6 +88,8 @@ class svmEnv1(gym.Env):  # inherit from super class gym (OpenAI)
                 princp_dim = int(result[1])
                 self.princp_dim = princp_dim
                 full_dim = int(result[2])
+
+                done = bool(abs(-0.1504259 - self.energies[-1]) < 1e-04 or full_dim >= 20)
 
                 # reward = -10.0
                 # self.agent_pos = np.array([self.energies[-1]]).astype(np.float32)
