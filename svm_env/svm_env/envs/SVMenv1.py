@@ -89,8 +89,6 @@ class svmEnv1(gym.Env):  # inherit from super class gym (OpenAI)
                 self.princp_dim = princp_dim
                 full_dim = int(result[2])
 
-                done = bool(abs(-0.1504259 - self.energies[-1]) < 1e-04 or full_dim >= 20)
-
                 # reward = -10.0
                 # self.agent_pos = np.array([self.energies[-1]]).astype(np.float32)
                 # print("This action IS REMOVED from actions taken and sigmas, the enery is NOT STORED!")
