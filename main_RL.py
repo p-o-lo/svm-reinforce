@@ -63,16 +63,42 @@ def save_all(dat_file, i_ep, sigmas_i_ep, rew_i_ep, en_i_ep, pri_dim_i_ep, act_m
         dat_file['critic_models'][f'cri_mod_{i_ep}'].attrs.create(name=k, data=critic_model[k].numpy())
 
 
-def close_file(dat_file, actor_model_file, critic_model_file):
+def close_file(dat_file, actor_model_file, critic_model_file, file_sigmas):
     dat_file.close()
     os.remove(actor_model_file)
     os.remove(critic_model_file)
+    os.remove(file_sigmas)
+
+# Env declaration and print its features
+env = gym.make('svm_env:svmEnv-v1', file_sigmas="./svmCodeSVD/sigmas.dat")
+
+print('### Env Name : ', env.unwrapped.spec.id)
+
+obs_space = env.observation_space
+
+print('### Observation space : ', obs_space)
+
+state_size = env.observation_space.shape[-1]
+
+print('### Size of observation space : ', state_size)
+
+act_space = env.action_space
+
+print('### Action space : ', act_space)
+
+act_size = env.action_space.shape[-1]
+
+print('### Number of actions : ', act_size)
+
+state = env.reset()
+
+print('### State after reset : ', state)
+
+print('### File where will be stored sigmas : ', env.file_sigmas)
 
 
-# Env declaration
-env = gym.make('svm_env:svmEnv-v1', file_sigmas="./svmCodeSVD/sigmas1.dat")
 # Instance of the ddpg agent
-agent = DDPG_agent(state_size=1, action_size=3, seed=2)
+agent = DDPG_agent(state_size, act_size, seed=0)
 
 
 def run_ddpg(max_t_step=250, n_episodes=400):
@@ -110,5 +136,9 @@ def run_ddpg(max_t_step=250, n_episodes=400):
 
         print('Episode {} ... Score: {:.3f}'.format(i_ep, np.sum(rew_i_ep)))
 
-    close_file(dat_file, 'checkpoint_actor.pth', 'checkpoint_critic.pth')
+    close_file(dat_file, 'checkpoint_actor.pth', 'checkpoint_critic.pth', env.file_sigmas)
     return dat_file
+
+
+# Run
+all_data = run_ddpg()
