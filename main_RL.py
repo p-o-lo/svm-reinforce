@@ -70,7 +70,7 @@ def close_file(dat_file, actor_model_file, critic_model_file, file_sigmas):
     os.remove(file_sigmas)
 
 # Env declaration and print its features
-env = gym.make('svm_env:svmEnv-v1', file_sigmas="./svmCodeSVD/sigmas.dat")
+env = gym.make('svm_env:svmEnv-v1', file_sigmas="./svmCodeSVD/sigmas2.dat")
 
 print('### Env Name : ', env.unwrapped.spec.id)
 
