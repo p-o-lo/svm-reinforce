@@ -54,13 +54,13 @@ def save_all(dat_file, i_ep, sigmas_i_ep, rew_i_ep, en_i_ep, pri_dim_i_ep, act_m
     actor_model = torch.load(act_model_i_ep)
     dat_file['actor_models'].create_dataset(f'act_mod_{i_ep}', dtype='f')
     for k in actor_model.keys():
-        dat_file['actor_models'][f'act_mod_{i_ep}'].attrs.create(name=k, data=actor_model[k].numpy())
+        dat_file['actor_models'][f'act_mod_{i_ep}'].attrs.create(name=k, data=actor_model[k].cpu().data.numpy())
 
     # Store in actor models group the network params at each ep
     critic_model = torch.load(cr_model_i_ep)
     dat_file['critic_models'].create_dataset(f'cri_mod_{i_ep}', dtype='f')
     for k in critic_model.keys():
-        dat_file['critic_models'][f'cri_mod_{i_ep}'].attrs.create(name=k, data=critic_model[k].numpy())
+        dat_file['critic_models'][f'cri_mod_{i_ep}'].attrs.create(name=k, data=critic_model[k].cpu().data.numpy())
 
 
 def close_file(dat_file, actor_model_file, critic_model_file, file_sigmas):
