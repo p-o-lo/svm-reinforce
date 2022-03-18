@@ -40,10 +40,17 @@ def create_info_h5(agent, env):
     dataFile.create_group('actor_models')
     dataFile.create_group('critic_models')
 
-    return dataFile
+    # Close and return data file name
+    dataFile_name = dataFile.filename
+    dataFile.close()
+
+    return dataFile_name
 
 
-def save_all(dat_file, i_ep, sigmas_i_ep, rew_i_ep, en_i_ep, pri_dim_i_ep, act_model_i_ep, cr_model_i_ep):
+def save_all(dat_file_name, i_ep, sigmas_i_ep, rew_i_ep, en_i_ep, pri_dim_i_ep, act_model_i_ep, cr_model_i_ep):
+    # Open data file
+    dat_file = h5py.File(dat_file_name, 'a')
+
     # Create datasets for rewards, energies, pri dim and store data in it
     dat_file['sigmas'].create_dataset(f'sigmas_ep_{i_ep}', dtype='f', data=sigmas_i_ep)
     dat_file['rewards'].create_dataset(f'rew_ep_{i_ep}', dtype='f', data=rew_i_ep)
@@ -62,14 +69,18 @@ def save_all(dat_file, i_ep, sigmas_i_ep, rew_i_ep, en_i_ep, pri_dim_i_ep, act_m
     for k in critic_model.keys():
         dat_file['critic_models'][f'cri_mod_{i_ep}'].attrs.create(name=k, data=critic_model[k].cpu().data.numpy())
 
-
-def close_file(dat_file, actor_model_file, critic_model_file, file_sigmas):
+    # Close data file
     dat_file.close()
+
+
+def close_file(actor_model_file, critic_model_file, file_sigmas):
     os.remove(actor_model_file)
     os.remove(critic_model_file)
     os.remove(file_sigmas)
 
 # Env declaration and print its features
+
+
 env = gym.make('svm_env:svmEnv-v1', file_sigmas="./svmCodeSVD/sigmas2.dat")
 
 print('### Env Name : ', env.unwrapped.spec.id)
@@ -104,7 +115,7 @@ agent = DDPG_agent(state_size, act_size, seed=0)
 def run_ddpg(max_t_step=250, n_episodes=400):
 
     # Create h5 file and store info about alg and its hypereparams
-    dat_file = create_info_h5(agent, env)
+    dat_file_name = create_info_h5(agent, env)
 
     for i_ep in range(n_episodes):
         state = env.reset()
@@ -130,14 +141,14 @@ def run_ddpg(max_t_step=250, n_episodes=400):
                 break
 
         # Save data during training (to not lose the work done)
-        save_all(dat_file=dat_file, i_ep=int(i_ep), sigmas_i_ep=env.actions_taken
+        save_all(dat_file_name=dat_file_name, i_ep=int(i_ep), sigmas_i_ep=env.actions_taken
                  , rew_i_ep=rew_i_ep, en_i_ep=en_i_ep, pri_dim_i_ep=pri_dim_i_ep
                  , act_model_i_ep='checkpoint_actor.pth', cr_model_i_ep='checkpoint_critic.pth')
 
         print('Episode {} ... Score: {:.3f}'.format(i_ep, np.sum(rew_i_ep)))
 
     close_file(dat_file, 'checkpoint_actor.pth', 'checkpoint_critic.pth', env.file_sigmas)
-    return dat_file
+    return dat_file_name
 
 
 # Run
