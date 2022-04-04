@@ -11,9 +11,9 @@ from ddpg_agent import DDPG_agent
 def create_info_h5(agent, env):
     # Check if file exist and creat it
     i = 0
-    while os.path.exists(f'run_{i}.hdf5'):
+    while os.path.exists(f'runs_step_envs/run_{i}.hdf5'):
         i += 1
-    dataFile = h5py.File(f'run_{i}.hdf5', 'a')
+    dataFile = h5py.File(f'runs_step_envs/run_{i}.hdf5', 'a')
 
     # Create dataset to store info in hdf5 file
     info = {'alg': agent.name, 'env': env.unwrapped.spec.id}
