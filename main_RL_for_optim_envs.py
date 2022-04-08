@@ -13,9 +13,8 @@ act_space = env.action_space.shape
 act_size = env.action_space.shape[0]*env.action_space.shape[-1]
 state = env.reset()
 
+
 # Save all rewards, energies and princip dims in files during episode training
-
-
 def create_run_fold_and_info(agent, env):
 
     # Check if folder exist and creat it
@@ -26,7 +25,7 @@ def create_run_fold_and_info(agent, env):
     os.makedirs(name_dir)
 
     # Create info.p to store info in pickle file
-    info = {'alg': agent.name, 'env': env.unwrapped.spec.id,
+    info = {'alg': agent.name, 'env': env.unwrapped.spec.id, 'basis_size': env.n_basis,
             'batch_size': agent.batch_size, 'bootstrap_size': agent.bootstrap_size,
             'gamma': agent.gamma, 'tau': agent.tau, 'lr_critic': agent.lr_critic,
             'lr_actor': agent.lr_actor, 'update_every': agent.update_every,
@@ -56,6 +55,8 @@ def rm_useless_file(actor_model_file, critic_model_file, file_sigmas):
 
 
 agent = DDPG_agent(state_size, act_size, seed=0)
+actor_model_file = 'checkpoint_actor.pth'
+critic_model_file = 'checkpoint_critic.pth'
 
 
 # Run ddpg algs
@@ -86,21 +87,21 @@ def run_ddpg(max_t_step=10, n_episodes=10):
             en_i_ep.append(state[0])
             pri_dim_i_ep.append(env.princp_dim)
             full_dim_i_ep.append(env.full_dim)
-            torch.save(agent.actor_local.state_dict(), 'checkpoint_actor.pth')
-            torch.save(agent.critic_local.state_dict(), 'checkpoint_critic.pth')
+            torch.save(agent.actor_local.state_dict(), actor_model_file)
+            torch.save(agent.critic_local.state_dict(), critic_model_file)
             if done:
                 break
 
         # Save data during training (to not lose the work done)
         save_all(name_run_dir=name_run_dir, i_ep=int(i_ep), sigmas_i_ep=action_i_episode,
                 rew_i_ep=rew_i_ep, en_i_ep=en_i_ep, pri_dim_i_ep=pri_dim_i_ep,
-                full_dim_i_ep=full_dim_i_ep, act_model_i_ep='checkpoint_actor.pth',
-                cr_model_i_ep='checkpoint_critic.pth')
+                full_dim_i_ep=full_dim_i_ep, act_model_i_ep=actor_model_file,
+                cr_model_i_ep=critic_model_file)
 
         print('Episode {} ... Score: {:.3f}'.format(i_ep, np.sum(rew_i_ep)))
 
-    rm_useless_file('checkpoint_actor.pth', 'checkpoint_critic.pth', env.file_sigmas)
+    rm_useless_file(actor_model_file, critic_model_file, env.file_sigmas)
     return name_run_dir
 
 
-all_data = run_ddpg(10, 10)
+all_data = run_ddpg()
