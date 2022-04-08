@@ -3,15 +3,15 @@ import random
 import copy
 from collections import namedtuple, deque
 
-from actor_critic_model import Actor, Critic
+from actor_critic_model_ddpg import Actor, Critic
 
 import torch
 import torch.nn.functional as F
 import torch.optim as optim
 
 BUFFER_SIZE = int(1e5)  # replay buffer size
-BATCH_SIZE = 64         # minibatch size
-BOOTSTRAP_SIZE = 5      # for n-step bootstrap
+BATCH_SIZE = 1          # minibatch size
+BOOTSTRAP_SIZE = 1      # for n-step bootstrap
 GAMMA = 1.0             # discount factor
 TAU = 1e-3              # for soft update of target parameters
 LR_ACTOR = 1e-4         # learning rate of the actor
