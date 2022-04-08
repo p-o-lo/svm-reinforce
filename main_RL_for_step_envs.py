@@ -82,7 +82,7 @@ def rm_useless_files(actor_model_file, critic_model_file, file_sigmas):
 # Env declaration and print its features
 
 
-env = gym.make('svm_env:svmEnv-v1', file_sigmas="./svmCodeSVD/sigmas2.dat")
+env = gym.make('svm_env:svmEnv-v0', file_sigmas="./svmCodeSVD/sigmas0.dat")
 
 obs_space = env.observation_space
 
@@ -97,6 +97,9 @@ state = env.reset()
 
 # Instance of the ddpg agent
 agent = DDPG_agent(state_size, act_size, seed=0)
+
+actor_model_file = 'checkpoint_actor0.pth'
+critic_model_file = 'checkpoint_critic0.pth'
 
 
 def run_ddpg(max_t_step=250, n_episodes=400):
@@ -122,19 +125,19 @@ def run_ddpg(max_t_step=250, n_episodes=400):
             rew_i_ep.append(reward)
             en_i_ep.append(state[0])
             pri_dim_i_ep.append(env.princp_dim)
-            torch.save(agent.actor_local.state_dict(), 'checkpoint_actor.pth')
-            torch.save(agent.critic_local.state_dict(), 'checkpoint_critic.pth')
+            torch.save(agent.actor_local.state_dict(), actor_model_file)
+            torch.save(agent.critic_local.state_dict(), critic_model_file)
             if done:
                 break
 
         # Save data during training (to not lose the work done)
         save_all(dat_file_name=dat_file_name, i_ep=int(i_ep), sigmas_i_ep=env.actions_taken,
                 rew_i_ep=rew_i_ep, en_i_ep=en_i_ep, pri_dim_i_ep=pri_dim_i_ep,
-                act_model_i_ep='checkpoint_actor.pth', cr_model_i_ep='checkpoint_critic.pth')
+                act_model_i_ep=actor_model_file, cr_model_i_ep=critic_model_file)
 
         print('Episode {} ... Score: {:.3f}'.format(i_ep, np.sum(rew_i_ep)))
 
-    rm_useless_files('checkpoint_actor.pth', 'checkpoint_critic.pth', env.file_sigmas)
+    rm_useless_files(actor_model_file, critic_model_file, env.file_sigmas)
     return dat_file_name
 
 
