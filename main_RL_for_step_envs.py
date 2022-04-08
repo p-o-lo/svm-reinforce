@@ -3,6 +3,7 @@ import gym
 import torch
 import os
 import h5py
+
 from ddpg_agent import DDPG_agent
 
 # Helper functions to save all the data of a run
@@ -23,11 +24,11 @@ def create_info_h5(agent, env):
         dataFile['info'].attrs[k] = info[k]
 
     # Create dataset to store hyperparams of the model in hdf5 file
-    hyperparams = {'batch_size': agent.batch_size, 'bootstrap_size': agent.bootstrap_size
-                   , 'gamma': agent.gamma, 'tau': agent.tau, 'lr_critic': agent.lr_critic
-                   , 'lr_actor': agent.lr_actor, 'update_every': agent.update_every
-                   , 'transfer_every': agent.transfer_every, 'num_update': agent.num_update 
-                   , 'add_noise_every': agent.add_noise_every}
+    hyperparams = {'batch_size': agent.batch_size, 'bootstrap_size': agent.bootstrap_size,
+            'gamma': agent.gamma, 'tau': agent.tau, 'lr_critic': agent.lr_critic,
+            'lr_actor': agent.lr_actor, 'update_every': agent.update_every,
+            'transfer_every': agent.transfer_every, 'num_update': agent.num_update,
+            'add_noise_every': agent.add_noise_every}
     dataFile.create_dataset('hyperparams', dtype='f')
     for k in hyperparams.keys():
         dataFile['hyperparams'].attrs[k] = hyperparams[k]
@@ -73,7 +74,7 @@ def save_all(dat_file_name, i_ep, sigmas_i_ep, rew_i_ep, en_i_ep, pri_dim_i_ep, 
     dat_file.close()
 
 
-def close_file(actor_model_file, critic_model_file, file_sigmas):
+def rm_useless_files(actor_model_file, critic_model_file, file_sigmas):
     os.remove(actor_model_file)
     os.remove(critic_model_file)
     os.remove(file_sigmas)
@@ -83,29 +84,15 @@ def close_file(actor_model_file, critic_model_file, file_sigmas):
 
 env = gym.make('svm_env:svmEnv-v1', file_sigmas="./svmCodeSVD/sigmas2.dat")
 
-print('### Env Name : ', env.unwrapped.spec.id)
-
 obs_space = env.observation_space
-
-print('### Observation space : ', obs_space)
 
 state_size = env.observation_space.shape[-1]
 
-print('### Size of observation space : ', state_size)
-
 act_space = env.action_space
-
-print('### Action space : ', act_space)
 
 act_size = env.action_space.shape[-1]
 
-print('### Number of actions : ', act_size)
-
 state = env.reset()
-
-print('### State after reset : ', state)
-
-print('### File where will be stored sigmas : ', env.file_sigmas)
 
 
 # Instance of the ddpg agent
@@ -141,13 +128,13 @@ def run_ddpg(max_t_step=250, n_episodes=400):
                 break
 
         # Save data during training (to not lose the work done)
-        save_all(dat_file_name=dat_file_name, i_ep=int(i_ep), sigmas_i_ep=env.actions_taken
-                 , rew_i_ep=rew_i_ep, en_i_ep=en_i_ep, pri_dim_i_ep=pri_dim_i_ep
-                 , act_model_i_ep='checkpoint_actor.pth', cr_model_i_ep='checkpoint_critic.pth')
+        save_all(dat_file_name=dat_file_name, i_ep=int(i_ep), sigmas_i_ep=env.actions_taken,
+                rew_i_ep=rew_i_ep, en_i_ep=en_i_ep, pri_dim_i_ep=pri_dim_i_ep,
+                act_model_i_ep='checkpoint_actor.pth', cr_model_i_ep='checkpoint_critic.pth')
 
         print('Episode {} ... Score: {:.3f}'.format(i_ep, np.sum(rew_i_ep)))
 
-    close_file(dat_file, 'checkpoint_actor.pth', 'checkpoint_critic.pth', env.file_sigmas)
+    rm_useless_files('checkpoint_actor.pth', 'checkpoint_critic.pth', env.file_sigmas)
     return dat_file_name
 
 
