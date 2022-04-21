@@ -82,7 +82,7 @@ def rm_useless_files(actor_model_file, critic_model_file, file_sigmas):
 # Env declaration and print its features
 
 
-env = gym.make('svm_env:svmEnv-v0', file_sigmas="./svmCodeSVD/sigmas0.dat")
+env = gym.make('svm_env:svmEnv-v0', file_sigmas="./svmCodeSVD/sigmas1.dat")
 
 obs_space = env.observation_space
 
@@ -98,11 +98,11 @@ state = env.reset()
 # Instance of the ddpg agent
 agent = DDPG_agent(state_size, act_size, seed=0)
 
-actor_model_file = 'checkpoint_actor0.pth'
-critic_model_file = 'checkpoint_critic0.pth'
+actor_model_file = 'checkpoint_actor1.pth'
+critic_model_file = 'checkpoint_critic1.pth'
 
 
-def run_ddpg(max_t_step=250, n_episodes=400):
+def run_ddpg(max_t_step=300, n_episodes=600):
 
     # Create h5 file and store info about alg and its hypereparams
     dat_file_name = create_info_h5(agent, env)

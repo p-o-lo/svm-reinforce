@@ -6,7 +6,7 @@ import pickle
 
 from ddpg_agent import DDPG_agent
 
-env = gym.make('svm_env:svmEnv-v2', n_pairs=3, n_basis=150, file_sigmas="./svmCodeSVD/sigmas.dat")
+env = gym.make('svm_env:svmEnv-v2', n_pairs=3, n_basis=250, file_sigmas="./svmCodeSVD/sigmas6.dat")
 obs_space = env.observation_space
 state_size = env.observation_space.shape[-1]
 act_space = env.action_space.shape
@@ -55,12 +55,12 @@ def rm_useless_file(actor_model_file, critic_model_file, file_sigmas):
 
 
 agent = DDPG_agent(state_size, act_size, seed=0)
-actor_model_file = 'checkpoint_actor.pth'
-critic_model_file = 'checkpoint_critic.pth'
+actor_model_file = 'checkpoint_actor6.pth'
+critic_model_file = 'checkpoint_critic6.pth'
 
 
 # Run ddpg algs
-def run_ddpg(max_t_step=10, n_episodes=10):
+def run_ddpg(max_t_step=200, n_episodes=600):
 
     # Create h5 file and store info about alg and its hypereparams
     name_run_dir = create_run_fold_and_info(agent, env)
