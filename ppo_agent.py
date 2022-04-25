@@ -1,7 +1,7 @@
 import random
 import numpy as np
 
-from actor_critic_model_ppo import Actor, Critic
+from actor_critic_model_ppo import Actor, Critic 
 
 import torch
 import torch.optim as optim
@@ -116,15 +116,13 @@ class PPO_agent():
         """
 
         # Calculate the action from the actor network
-        self.actor_local.eval()
         state = torch.from_numpy(state).float().to(device)
-        action = self.actor_local(state).cpu()
-        self.actor_local.train()
+        mean = self.actor_local(state)
 
         # Build a MultivariateNormal dist for log policy
         cov_var = torch.full(size=(self.action_size,), fill_value=0.5)
         cov_mat = torch.diag(cov_var)
-        dist = MultivariateNormal(action, cov_mat)
+        dist = MultivariateNormal(mean, cov_mat)
         action = dist.sample()
         log_pol = dist.log_prob(action)
 
@@ -145,20 +143,16 @@ class PPO_agent():
                 log_pols: the log probabilities of the actions taken in batch_acts given batch_obs
         """
         # Query critic network for a value V for each batch_obs. Shape of V should be same as batch_rtgs
-        self.critic_local.eval()
-        V = self.critic_local(trajs_state).squeeze().cpu()
-        self.critic_local.train()
+        V = self.critic_local(trajs_state).squeeze()
 
         # Calculate the log policies of actions in trajs using most recent actor network.
         # This segment of code is similar to that in get_action()
-        self.actor_local.eval()
-        actions = self.actor_local(trajs_state).cpu()
-        self.actor_local.train()
+        means = self.actor_local(trajs_state)
 
         # Build a MultivariateNormal dist for log policy
         cov_var = torch.full(size=(self.action_size,), fill_value=0.5)
         cov_mat = torch.diag(cov_var)
-        dist = MultivariateNormal(actions, cov_mat)
+        dist = MultivariateNormal(means, cov_mat)
         log_pols = dist.log_prob(trajs_acts)
 
         # Return the value vector V of each observation in the batch
@@ -206,7 +200,7 @@ class PPO_agent():
         surr2 = torch.clamp(ratio, 1 - self.clip, 1 + self.clip) * advantage
 
         # Calculate the losso for both actor and critic NN
-        actor_loss = -(torch.min(surr1, surr2)).mean()
+        actor_loss = (-torch.min(surr1, surr2)).mean()
         critic_loss = nn.MSELoss()(V, rew_t_future)
 
         # Calculate gradients and perform backpropagation for actor network
