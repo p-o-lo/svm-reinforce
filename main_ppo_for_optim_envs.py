@@ -4,9 +4,9 @@ import torch
 import os
 import pickle
 
-from ddpg_agent import DDPG_agent
+from ppo_agent import PPO_agent
 
-env = gym.make('svm_env:svmEnv-v2', n_pairs=3, n_basis=250, file_sigmas="./svmCodeSVD/sigmas6.dat")
+env = gym.make('svm_env:svmEnv-v2', n_pairs=3, n_basis=250, file_sigmas="./svmCodeSVD/sigmas.dat")
 obs_space = env.observation_space
 state_size = env.observation_space.shape[-1]
 act_space = env.action_space.shape
@@ -26,10 +26,9 @@ def create_run_fold_and_info(agent, env):
 
     # Create info.p to store info in pickle file
     info = {'alg': agent.name, 'env': env.unwrapped.spec.id, 'basis_size': env.n_basis,
-            'batch_size': agent.batch_size, 'bootstrap_size': agent.bootstrap_size,
-            'gamma': agent.gamma, 'tau': agent.tau, 'lr_critic': agent.lr_critic,
-            'lr_actor': agent.lr_actor, 'update_every': agent.update_every,
-            'transfer_every': agent.transfer_every, 'num_update': agent.num_update,
+            'lambda_gae': agent.lambda_gae, 'gamma': agent.gamma,
+            'clip': agent.clip, 'lr_critic': agent.lr_critic,
+            'lr_actor': agent.lr_actor, 'num_update': agent.num_update,
             'add_noise_every': agent.add_noise_every}
 
     pickle.dump(info, open(name_dir+'info.p', 'wb'))
@@ -54,54 +53,87 @@ def rm_useless_file(actor_model_file, critic_model_file, file_sigmas):
     os.remove(file_sigmas)
 
 
-agent = DDPG_agent(state_size, act_size, seed=0)
+agent = PPO_agent(state_size, act_size, seed=0)
 actor_model_file = 'checkpoint_actor6.pth'
 critic_model_file = 'checkpoint_critic6.pth'
 
 
-# Run ddpg algs
-def run_ddpg(max_t_step=200, n_episodes=600):
-
-    # Create h5 file and store info about alg and its hypereparams
+# Run ppo algs
+def run_ppo(num_episodes=300, num_trajs=10, length_traj=100):
     name_run_dir = create_run_fold_and_info(agent, env)
+    for k in range(num_episodes):
+        # Data for trajectories
+        trajs_states = []
+        trajs_acts = []
+        all_rews = []
+        trajs_pri_dim = []
+        trajs_full_dim = []
+        trajs_log_pol = []
+        len_trajs = []
 
-    for i_ep in range(n_episodes):
-        state = env.reset()
-        agent.reset()
-        rew_i_ep = []
-        en_i_ep = []
-        pri_dim_i_ep = []
-        full_dim_i_ep = []
-        action_i_episode = []
+        # Run to collect trajs for a maximum of length_traj
+        for i in range(num_trajs):
+            # Episodic data. Keeps track of rewards per traj
+            print(f'##### {i}th Traj #####')
+            ep_rews = []
+            state = env.reset()
+            done = False
 
-        # Training loop of each episode
-        for t_step in range(max_t_step):
-            action = agent.act(state)
-            next_state, reward, done, info = env.step(action.reshape((env.n_basis, env.n_pairs)))
-            agent.step(state, action, reward, next_state, done)
-            state = next_state
+            for t_traj in range(length_traj):
+                # Track observations in this batch
+                trajs_states.append(state)
 
-            # Save rew, energies, princip dims, act and crit models
-            action_i_episode.append(action.reshape((env.n_basis, env.n_pairs)))
-            rew_i_ep.append(reward)
-            en_i_ep.append(state[0])
-            pri_dim_i_ep.append(env.princp_dim)
-            full_dim_i_ep.append(env.full_dim)
-            torch.save(agent.actor_local.state_dict(), actor_model_file)
-            torch.save(agent.critic_local.state_dict(), critic_model_file)
-            if done:
-                break
+                # Calculate action and log policy and perform a step of the env
+                action, log_policy = agent.act(state)
+                state, reward, done, info = env.step(action.reshape((env.n_basis,env.n_pairs)))
 
-        # Save data during training (to not lose the work done)
-        save_all(name_run_dir=name_run_dir, i_ep=int(i_ep), sigmas_i_ep=action_i_episode,
-                rew_i_ep=rew_i_ep, en_i_ep=en_i_ep, pri_dim_i_ep=pri_dim_i_ep,
-                full_dim_i_ep=full_dim_i_ep, act_model_i_ep=actor_model_file,
-                cr_model_i_ep=critic_model_file)
+                # Track recent reward, action, and action log policy, pri dim, full dim
+                ep_rews.append(reward)
+                trajs_acts.append(action)
+                trajs_log_pol.append(log_policy)
+                trajs_pri_dim.append(env.princp_dim)
+                trajs_full_dim.append(env.full_dim)
 
-        print('Episode {} ... Score: {:.3f}'.format(i_ep, np.sum(rew_i_ep)))
+                if done:
+                    break
 
-    rm_useless_file(actor_model_file, critic_model_file, env.file_sigmas)
+            len_trajs.append(1 + t_traj)
+            all_rews.append(ep_rews)
+
+        # Reshape data as tensors
+        trajs_states = torch.tensor(trajs_states, dtype=torch.float)
+        trajs_acts = torch.tensor(trajs_acts, dtype=torch.float)
+        trajs_log_pol = torch.tensor(trajs_log_pol, dtype=torch.float)
+
+        # Run step for learning
+        agent.step(trajs_states, trajs_acts, trajs_log_pol, all_rews, len_trajs)
+        torch.save(agent.actor_local.state_dict(), 'checkpoint_actor.pth')
+        torch.save(agent.critic_local.state_dict(), 'checkpoint_critic.pth')
+
+        # Save energies (states), sigmas (actions), rew, pri dim, full dim
+        # actor, critic models
+        save_all(name_run_dir=name_run_dir, i_ep=int(k),
+                sigmas_i_ep=trajs_acts.reshape((num_trajs, length_traj, env.n_basis, env.n_pairs)),
+                rew_i_ep=all_rews, en_i_ep=trajs_states.reshape((num_trajs, length_traj)),
+                pri_dim_i_ep=np.reshape(trajs_pri_dim, (num_trajs, length_traj)),
+                full_dim_i_ep=np.reshape(trajs_full_dim, (num_trajs, length_traj)),
+                act_model_i_ep=actor_model_file, cr_model_i_ep=critic_model_file)
+
+        rm_useless_file('checkpoint_actor.pth', 'checkpoint_critic.pth', env.file_sigmas)
+
+        # Calculate metrics to print
+        avg_iter_lens = np.mean(len_trajs)
+        avg_iter_retur = np.mean([np.sum(ep_rews) for ep_rews in all_rews])
+
+        # Print logging statements
+        print(flush=True)
+        print(f"-------------------- Iteration #{agent.k_step} --------------------", flush=True)
+        print(f"Average Episodic Length: {avg_iter_lens}", flush=True)
+        print(f"Average Episodic Return: {avg_iter_retur}", flush=True)
+        print(f"Timesteps So Far: {agent.t_step}", flush=True)
+        print(f"------------------------------------------------------", flush=True)
+        print(flush=True)
     return name_run_dir
 
 
-all_data = run_ddpg()
+name_dir_ppo = run_ppo()
