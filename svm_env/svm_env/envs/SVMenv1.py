@@ -43,7 +43,7 @@ class svmEnv1(gym.Env):  # inherit from super class gym (OpenAI)
         return self.agent_pos
 
     def step(self, action):
-        action = action*55.0 + 55.0
+        action = action*109/2 + 111/2
         self.i_step = self.i_step + 1
         print('#### CALL STEP ####', self.i_step)
         print('Action chosen at step: ', action)
