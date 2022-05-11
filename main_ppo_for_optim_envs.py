@@ -85,7 +85,7 @@ def run_ppo(num_episodes=300, num_trajs=10, length_traj=100):
 
                 # Calculate action and log policy and perform a step of the env
                 action, log_policy = agent.act(state)
-                state, reward, done, info = env.step(action.reshape((env.n_basis,env.n_pairs)))
+                state, reward, done, info = env.step(action.reshape((env.n_basis, env.n_pairs)))
 
                 # Track recent reward, action, and action log policy, pri dim, full dim
                 ep_rews.append(reward)
@@ -107,8 +107,8 @@ def run_ppo(num_episodes=300, num_trajs=10, length_traj=100):
 
         # Run step for learning
         agent.step(trajs_states, trajs_acts, trajs_log_pol, all_rews, len_trajs)
-        torch.save(agent.actor_local.state_dict(), 'checkpoint_actor.pth')
-        torch.save(agent.critic_local.state_dict(), 'checkpoint_critic.pth')
+        torch.save(agent.actor_local.state_dict(), actor_model_file)
+        torch.save(agent.critic_local.state_dict(), critic_model_file)
 
         # Save energies (states), sigmas (actions), rew, pri dim, full dim
         # actor, critic models
@@ -119,7 +119,7 @@ def run_ppo(num_episodes=300, num_trajs=10, length_traj=100):
                 full_dim_i_ep=np.reshape(trajs_full_dim, (num_trajs, length_traj)),
                 act_model_i_ep=actor_model_file, cr_model_i_ep=critic_model_file)
 
-        rm_useless_file('checkpoint_actor.pth', 'checkpoint_critic.pth', env.file_sigmas)
+        rm_useless_file(actor_model_file, actor_model_file, env.file_sigmas)
 
         # Calculate metrics to print
         avg_iter_lens = np.mean(len_trajs)

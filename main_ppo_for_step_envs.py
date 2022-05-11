@@ -160,6 +160,9 @@ def run_ppo(num_iterations=200, num_trajs=10, length_traj=250):
                  act_model_i_ep=actor_model_file,
                  cr_model_i_ep=critic_model_file)
 
+        # Remove useless files
+        rm_useless_file(actor_model_file, actor_model_file, env.file_sigmas)
+
         # Calculate metrics to print
         avg_iter_lens = np.mean(len_trajs)
         avg_iter_retur = np.mean([np.sum(ep_rews) for ep_rews in all_rews])

@@ -130,14 +130,15 @@ def run_ddpg(max_t_step=300, n_episodes=600):
             if done:
                 break
 
-        # Save data during training (to not lose the work done)
+        # Save data during training (to not lose the work done) and remove useless
         save_all(dat_file_name=dat_file_name, i_ep=int(i_ep), sigmas_i_ep=env.actions_taken,
                 rew_i_ep=rew_i_ep, en_i_ep=en_i_ep, pri_dim_i_ep=pri_dim_i_ep,
                 act_model_i_ep=actor_model_file, cr_model_i_ep=critic_model_file)
 
+        rm_useless_files(actor_model_file, critic_model_file, env.file_sigmas)
+
         print('Episode {} ... Score: {:.3f}'.format(i_ep, np.sum(rew_i_ep)))
 
-    rm_useless_files(actor_model_file, critic_model_file, env.file_sigmas)
     return dat_file_name
 
 
