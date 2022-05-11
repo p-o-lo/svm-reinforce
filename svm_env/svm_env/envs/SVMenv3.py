@@ -70,10 +70,9 @@ class svmEnv3(gym.Env):  # inherit from super class gym (OpenAI)
 
             else:
                 print('#### THE ACTION IS A GOOD ONE ####')
-                x = self.n_basis - self.full_dim
                 y = self.full_dim - self.princp_dim
                 z = self.agent_pos[0] - result_en
-                reward = 10.0*z/(x + 1)/(y/3 + 1)
+                reward = 10.0*z/(y/10 + 0.01)
                 self.agent_pos = np.array([result_en]).astype(np.float32)
 
                 print('**** THE AGENT STATE IS THE ENERGY ****', result_en)
