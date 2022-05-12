@@ -113,10 +113,10 @@ def run_ppo(num_episodes=300, num_trajs=10, length_traj=100):
         # Save energies (states), sigmas (actions), rew, pri dim, full dim
         # actor, critic models
         save_all(name_run_dir=name_run_dir, i_ep=int(k),
-                sigmas_i_ep=trajs_acts.reshape((num_trajs, length_traj, env.n_basis, env.n_pairs)),
-                rew_i_ep=all_rews, en_i_ep=trajs_states.reshape((num_trajs, length_traj)),
-                pri_dim_i_ep=np.reshape(trajs_pri_dim, (num_trajs, length_traj)),
-                full_dim_i_ep=np.reshape(trajs_full_dim, (num_trajs, length_traj)),
+                sigmas_i_ep=trajs_acts.reshape((num_trajs, 1 + t_traj, env.n_basis, env.n_pairs)),
+                rew_i_ep=all_rews, en_i_ep=trajs_states.reshape((num_trajs, 1 + t_traj)),
+                pri_dim_i_ep=np.reshape(trajs_pri_dim, (num_trajs, 1 + t_traj)),
+                full_dim_i_ep=np.reshape(trajs_full_dim, (num_trajs, 1 + t_traj)),
                 act_model_i_ep=actor_model_file, cr_model_i_ep=critic_model_file)
 
         rm_useless_file(actor_model_file, actor_model_file, env.file_sigmas)

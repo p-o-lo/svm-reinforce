@@ -153,10 +153,10 @@ def run_ppo(num_iterations=200, num_trajs=10, length_traj=250):
 
         # Save data during training (to not lose the work done)
         save_all(dat_file_name=dat_file_name, i_ep=int(k),
-                 sigmas_i_ep=trajs_acts.reshape((num_trajs, length_traj, env.n_pairs)),
+                 sigmas_i_ep=trajs_acts.reshape((num_trajs, 1 + t_traj, env.n_pairs)),
                  rew_i_ep=all_rews,
-                 en_i_ep=trajs_states.reshape((num_trajs, length_traj)),
-                 pri_dim_i_ep=np.reshape(trajs_pri_dim, (num_trajs, length_traj)),
+                 en_i_ep=trajs_states.reshape((num_trajs, 1 + t_traj)),
+                 pri_dim_i_ep=np.reshape(trajs_pri_dim, (num_trajs, 1 + t_traj)),
                  act_model_i_ep=actor_model_file,
                  cr_model_i_ep=critic_model_file)
 
