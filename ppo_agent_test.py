@@ -10,7 +10,6 @@ import torch.nn as nn
 from torch.distributions import MultivariateNormal
 
 BUFFER_SIZE = int(1e5)  # replay buffer size
-BATCH_SIZE = 10         # minibatch size
 CLIP = 0.2              # clip for surrogate loss of ppo
 LAMBDA = 0.95           # for generalized advantage estimation
 GAMMA = 0.99            # discount factor
@@ -27,7 +26,6 @@ class PPO_agent():
 
     def __init__(self, state_size, action_size, seed,
                 name='PPO',
-                batch_size=BATCH_SIZE,
                 clip=CLIP,
                 lambda_gae=LAMBDA,
                 gamma=GAMMA,
@@ -58,7 +56,6 @@ class PPO_agent():
         self.action_size = action_size
         self.name = name
         self.seed = random.seed(seed)
-        self.batch_size = batch_size
         self.clip = clip
         self.gamma = gamma
         self.lambda_gae = lambda_gae
@@ -70,11 +67,6 @@ class PPO_agent():
         # Actor networks
         self.actor_local = Actor(self.state_size, self.action_size, seed).to(device)
         self.actor_optim = optim.Adam(self.actor_local.parameters(), lr=lr_actor)
-        self.actor_target = Actor(self.state_size, self.action_size, seed).to(device)
-
-        # Ensure that at the begining, both target and local are having the same parameters
-        self.soft_update(self.actor_local, self.actor_target, 1)
-        self.soft_update(self.critic_local, self.critic_target, 1)
 
         # Critic networks
         self.critic_local = Critic(self.state_size, seed).to(device)
@@ -92,10 +84,10 @@ class PPO_agent():
 
         Params
             ======
-                all_rews: the rewards in all trajectories, Shape: (# of traj (batch_size), number of timesteps per trajectory)
+                all_rews: the rewards in all trajectories, Shape: (# of traj , number of timesteps per trajectory)
             Return
             =====
-                rews_t_future: the future returns of each traj, Shape: (# of traj (batch size))
+                rews_t_future: the future returns of each traj, Shape: (# of traj )
 
         """
         rews_t_future = []
@@ -114,7 +106,7 @@ class PPO_agent():
 
     def act(self, state):
         """Queries an action from the actor network, should be called from collect_trajs.
-           It uses a multivariate gaussian with mean the output of the actor network. 
+           It uses a multivariate gaussian with mean the output of the actor network.
 
             Params
             ======
@@ -134,11 +126,13 @@ class PPO_agent():
         cov_mat = torch.diag(cov_var)
         dist = MultivariateNormal(mean, cov_mat)
         action = dist.sample()
+        action = torch.clamp(action, -1, 1)
+        log_pol = dist.log_prob(action)
 
-        return action.detach().numpy()
+        return action.detach().numpy(), log_pol.detach()
 
-    def value_func(self, trajs_state):
-        """Estimate the values of each state, and the log pol of 
+    def value_func(self, trajs_state, trajs_acts):
+        """Estimate the value of each state and the log pol
         each action in the most recent batch with the most recent
         iteration of the actor network. Should be called from learn.
 
@@ -154,13 +148,23 @@ class PPO_agent():
         # Query critic network for a value V for each batch_obs. Shape of V should be same as batch_rtgs
         V = self.critic_local(trajs_state).squeeze()
 
+        # Calculate the log policies of actions in trajs using most recent actor network.
+        # This segment of code is similar to that in act()
+        means = self.actor_local(trajs_state)
+
+        # Build a MultivariateNormal dist for log policy
+        cov_var = torch.full(size=(self.action_size,), fill_value=0.5)
+        cov_mat = torch.diag(cov_var)
+        dist = MultivariateNormal(means, cov_mat)
+        log_pols = dist.log_prob(trajs_acts)
+
         # Return the value vector V of each observation in the batch
         # and log probabilities log_probs of each action in the batch
-        return V
+        return V, log_pols
 
     def advantage_gae(self, all_rews, trajs_states, trajs_acts):
         """ Estimate the advantage function with generalized advantage
-            esitmation 
+            esitmation
 
             Params
             ======
@@ -195,9 +199,9 @@ class PPO_agent():
         # Convert adavantage to a tensor
         A = torch.tensor(A, dtype=torch.float).to(device)
 
-        return A
+        return A.detach()
 
-    def step(self, trajs_states, trajs_acts, all_rews, lens_trajs):
+    def step(self, trajs_states, trajs_acts, trajs_log_pol, all_rews, lens_trajs):
 
         # Increment t step as the length of the total trajs and the k iter
         self.t_step += np.sum(lens_trajs)
@@ -218,9 +222,9 @@ class PPO_agent():
 
         # The training loop of the network
         for _ in range(self.num_update):
-            self.learn(trajs_states, trajs_acts, rews_t_future, advantage)
+            self.learn(trajs_states, trajs_acts, trajs_log_pol, rews_t_future, advantage)
 
-    def learn(self, trajs_states, trajs_acts, rew_t_future, advantage):
+    def learn(self, trajs_states, trajs_acts, trajs_log_pol, rew_t_future, advantage):
         """Train the actor and critic networks. Here is where the main PPO algorithm resides.
 
                 Params
@@ -232,16 +236,16 @@ class PPO_agent():
         """
 
         # Calculate the value function and current log policy
-        V = self.value_func(trajs_states)
+        V, curr_log_pol = self.value_func(trajs_states, trajs_acts)
 
         # Calcualte the ratio between the current policy and the k_th
-        ratio = 
+        ratio = torch.exp(curr_log_pol - trajs_log_pol)
 
         # Calculate the surrogate loss function
         surr1 = ratio * advantage
         surr2 = torch.clamp(ratio, 1 - self.clip, 1 + self.clip) * advantage
 
-        # Calculate the losso for both actor and critic NN
+        # Calculate the loss for both actor and critic NN
         actor_loss = (-torch.min(surr1, surr2)).mean()
         critic_loss = nn.MSELoss()(V, rew_t_future)
 
@@ -254,19 +258,6 @@ class PPO_agent():
         self.critic_optim.zero_grad()
         critic_loss.backward(retain_graph=True)
         self.critic_optim.step()
-
-    def soft_update(self, local_model, target_model, tau):
-        """Soft update model parameters.
-        θ_target = τ*θ_local + (1 - τ)*θ_target
-
-        Params
-            ======
-            local_model: PyTorch model (weights will be copied from)
-            target_model: PyTorch model (weights will be copied to)
-            tau (float): interpolation parameter
-        """
-        for target_param, local_param in zip(target_model.parameters(), local_model.parameters()):
-            target_param.data.copy_(tau*local_param.data + (1.0-tau)*target_param.data)
 
 
 class OUNoise:
@@ -293,5 +284,3 @@ class OUNoise:
         # np.random.standard_normal(self.size)
         self.state = x + dx
         return self.state
-
-

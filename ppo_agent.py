@@ -199,7 +199,7 @@ class PPO_agent():
         # Convert adavantage to a tensor
         A = torch.tensor(A, dtype=torch.float).to(device)
 
-        return A
+        return A.detach()
 
     def step(self, trajs_states, trajs_acts, trajs_log_pol, all_rews, lens_trajs):
 
@@ -240,6 +240,7 @@ class PPO_agent():
 
         # Calcualte the ratio between the current policy and the k_th
         ratio = torch.exp(curr_log_pol - trajs_log_pol)
+        print('###### The ratio is :', ratio)
 
         # Calculate the surrogate loss function
         surr1 = ratio * advantage
@@ -249,12 +250,12 @@ class PPO_agent():
         actor_loss = (-torch.min(surr1, surr2)).mean()
         critic_loss = nn.MSELoss()(V, rew_t_future)
 
-        # Calculate gradients and perform backpropagation for actor network
+        # perform backpropagation for actor network
         self.actor_optim.zero_grad()
         actor_loss.backward(retain_graph=True)
         self.actor_optim.step()
 
-        # Calculate gradients and perform backpropagation for critic network
+        # perform backpropagation for critic network
         self.critic_optim.zero_grad()
         critic_loss.backward(retain_graph=True)
         self.critic_optim.step()
