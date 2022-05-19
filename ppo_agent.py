@@ -65,11 +65,11 @@ class PPO_agent():
         self.add_noise_every = add_noise_every
 
         # Actor networks
-        self.actor_local = Actor(self.state_size, self.action_size, seed).to(device)
+        self.actor_local = Actor(self.state_size, self.action_size, seed)
         self.actor_optim = optim.Adam(self.actor_local.parameters(), lr=lr_actor)
 
         # Critic networks
-        self.critic_local = Critic(self.state_size, seed).to(device)
+        self.critic_local = Critic(self.state_size, seed)
         self.critic_optim = optim.Adam(self.critic_local.parameters(), lr=lr_critic, weight_decay=weight_decay)
 
         # Initialize time steps and k iteration
@@ -100,7 +100,7 @@ class PPO_agent():
                 rews_t_future.insert(0, discounted_rew)
 
         # Convert the rewards to future into a tensor
-        rews_t_future = torch.tensor(rews_t_future, dtype=torch.float).to(device)
+        rews_t_future = torch.tensor(rews_t_future, dtype=torch.float)
 
         return rews_t_future
 
@@ -118,7 +118,7 @@ class PPO_agent():
         """
 
         # Calculate the action from the actor network
-        state = torch.from_numpy(state).float().to(device)
+        state = torch.from_numpy(state).float()
         mean = self.actor_local(state)
 
         # Build a MultivariateNormal dist for log policy
@@ -197,7 +197,7 @@ class PPO_agent():
                 j += 1
 
         # Convert adavantage to a tensor
-        A = torch.tensor(A, dtype=torch.float).to(device)
+        A = torch.tensor(A, dtype=torch.float)
 
         return A.detach()
 
@@ -240,7 +240,6 @@ class PPO_agent():
 
         # Calcualte the ratio between the current policy and the k_th
         ratio = torch.exp(curr_log_pol - trajs_log_pol)
-        print('###### The ratio is :', ratio)
 
         # Calculate the surrogate loss function
         surr1 = ratio * advantage
