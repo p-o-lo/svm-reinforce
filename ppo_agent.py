@@ -72,10 +72,6 @@ class PPO_agent():
         self.critic_local = Critic(self.state_size, seed)
         self.critic_optim = optim.Adam(self.critic_local.parameters(), lr=lr_critic, weight_decay=weight_decay)
 
-        # Initialize time steps and k iteration
-        self.k_step = 0
-        self.t_step = 0
-
         # Initialize noise
         self.noise = OUNoise(action_size, seed)
 
@@ -202,10 +198,6 @@ class PPO_agent():
         return A.detach()
 
     def step(self, trajs_states, trajs_acts, trajs_log_pol, all_rews, lens_trajs):
-
-        # Increment t step as the length of the total trajs and the k iter
-        self.t_step += np.sum(lens_trajs)
-        self.k_step += 1
 
         # Calculate the advantage function at k-th step (without gae lambda = 1)
         rews_t_future = self.compute_return_fut(all_rews)

@@ -6,7 +6,7 @@ import pickle
 
 from ppo_agent import PPO_agent
 
-env = gym.make('svm_env:svmEnv-v2', n_pairs=3, n_basis=250, file_sigmas="./svmCodeSVD/sigmas.dat")
+env = gym.make('svm_env:svmEnv-v2', n_pairs=3, n_basis=200, file_sigmas="./svmCodeSVD/sigmas.dat")
 obs_space = env.observation_space
 state_size = env.observation_space.shape[-1]
 act_space = env.action_space.shape
@@ -54,8 +54,8 @@ def rm_useless_file(actor_model_file, critic_model_file, file_sigmas):
 
 
 agent = PPO_agent(state_size, act_size, seed=0)
-actor_model_file = 'checkpoint_actor6.pth'
-critic_model_file = 'checkpoint_critic6.pth'
+actor_model_file = 'checkpoint_actor.pth'
+critic_model_file = 'checkpoint_critic.pth'
 
 
 # Run ppo algs
@@ -119,7 +119,7 @@ def run_ppo(num_episodes=300, num_trajs=10, length_traj=100):
                 full_dim_i_ep=np.reshape(trajs_full_dim, (num_trajs, 1 + t_traj)),
                 act_model_i_ep=actor_model_file, cr_model_i_ep=critic_model_file)
 
-        rm_useless_file(actor_model_file, actor_model_file, env.file_sigmas)
+        rm_useless_file(actor_model_file, critic_model_file, env.file_sigmas)
 
         # Calculate metrics to print
         avg_iter_lens = np.mean(len_trajs)
@@ -127,10 +127,10 @@ def run_ppo(num_episodes=300, num_trajs=10, length_traj=100):
 
         # Print logging statements
         print(flush=True)
-        print(f"-------------------- Iteration #{agent.k_step} --------------------", flush=True)
+        print(f"-------------------- Iteration #{k} --------------------", flush=True)
         print(f"Average Episodic Length: {avg_iter_lens}", flush=True)
         print(f"Average Episodic Return: {avg_iter_retur}", flush=True)
-        print(f"Timesteps So Far: {agent.t_step}", flush=True)
+        print(f"Timesteps So Far: {np.sum(len_trajs)}", flush=True)
         print(f"------------------------------------------------------", flush=True)
         print(flush=True)
     return name_run_dir

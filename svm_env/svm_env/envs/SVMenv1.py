@@ -114,7 +114,7 @@ class svmEnv1(gym.Env):  # inherit from super class gym (OpenAI)
                     print('#### THE ACTION IS A GOOD ONE #### --> Store the energy got!')
                     self.energies.append(result_en)
 
-                    reward = -80.0*abs(result_en + 0.1504259)/1.1504259 + 10.0
+                    reward = -10.0*abs(result_en + 0.1504259)/0.1504259 + 10.0
                     print('Reward is ', reward)
 
                 return self.agent_pos, reward, done, info

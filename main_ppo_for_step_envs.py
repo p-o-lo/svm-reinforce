@@ -169,10 +169,10 @@ def run_ppo(num_iterations=200, num_trajs=10, length_traj=250):
 
         # Print logging statements
         print(flush=True)
-        print(f"-------------------- Iteration #{agent.k_step} --------------------", flush=True)
+        print(f"-------------------- Iteration #{k} --------------------", flush=True)
         print(f"Average Episodic Length: {avg_iter_lens}", flush=True)
         print(f"Average Episodic Return: {avg_iter_retur}", flush=True)
-        print(f"Timesteps So Far: {agent.t_step}", flush=True)
+        print(f"Timesteps So Far: {np.sum(len_trajs)}", flush=True)
         print(f"------------------------------------------------------", flush=True)
         print(flush=True)
     return dat_file_name
