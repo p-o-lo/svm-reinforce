@@ -7,7 +7,7 @@ import subprocess
 
 class svmEnv2(gym.Env):  # inherit from super class gym (OpenAI)
 
-    def __init__(self, n_pairs=3, n_basis=200, file_sigmas="./svmCodeSVD/sigmas.dat"):
+    def __init__(self, n_pairs=3, n_basis=250, file_sigmas="./svmCodeSVD/sigmas.dat"):
 
         self.file_sigmas = file_sigmas
         self.sigmas = open(self.file_sigmas, 'w')
@@ -35,7 +35,7 @@ class svmEnv2(gym.Env):  # inherit from super class gym (OpenAI)
         return self.agent_pos
 
     def step(self, action):
-        action = action*109/2 + 111/2
+        action = action*99/4 + 101/4
         print("****CALL STEP****")
         print("Action chosen at step: ", action)
 
