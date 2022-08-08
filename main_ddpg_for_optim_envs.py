@@ -6,7 +6,7 @@ import pickle
 
 from ddpg_agent import DDPG_agent
 
-env = gym.make('svm_env:svmEnv-v2', n_pairs=3, n_basis=250, file_sigmas="./svmCodeSVD/sigmas6.dat")
+env = gym.make('svm_env:svmEnv-v3', n_pairs=3, n_basis=250, file_sigmas="./svmCodeSVD/sigmas2.dat")
 obs_space = env.observation_space
 state_size = env.observation_space.shape[-1]
 act_space = env.action_space.shape
@@ -55,8 +55,8 @@ def rm_useless_file(actor_model_file, critic_model_file, file_sigmas):
 
 
 agent = DDPG_agent(state_size, act_size, seed=0)
-actor_model_file = 'checkpoint_actor6.pth'
-critic_model_file = 'checkpoint_critic6.pth'
+actor_model_file = 'checkpoint_actor2.pth'
+critic_model_file = 'checkpoint_critic2.pth'
 
 
 # Run ddpg algs
@@ -95,8 +95,8 @@ def run_ddpg(max_t_step=200, n_episodes=600):
         # Save data during training (to not lose the work done) and remove useless
         save_all(name_run_dir=name_run_dir, i_ep=int(i_ep), sigmas_i_ep=action_i_episode,
                 rew_i_ep=rew_i_ep, en_i_ep=en_i_ep, pri_dim_i_ep=pri_dim_i_ep,
-                full_dim_i_ep=full_dim_i_ep, act_model_i_ep=actor_model_file,
-                cr_model_i_ep=critic_model_file)
+                full_dim_i_ep=full_dim_i_ep, act_model_i_ep=torch.load(actor_model_file),
+                cr_model_i_ep=torch.load(critic_model_file))
 
         rm_useless_file(actor_model_file, critic_model_file, env.file_sigmas)
 

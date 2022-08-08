@@ -82,7 +82,7 @@ def rm_useless_files(actor_model_file, critic_model_file, file_sigmas):
 # Env declaration and print its features
 
 
-env = gym.make('svm_env:svmEnv-v1', file_sigmas="./svmCodeSVD/sigmas9.dat")
+env = gym.make('svm_env:svmEnv-v0', file_sigmas="./svmCodeSVD/sigmas_0.dat")
 
 obs_space = env.observation_space
 
@@ -98,11 +98,11 @@ state = env.reset()
 # Instance of the ddpg agent
 agent = DDPG_agent(state_size, act_size, seed=0)
 
-actor_model_file = 'checkpoint_actor9.pth'
-critic_model_file = 'checkpoint_critic9.pth'
+actor_model_file = 'checkpoint_actor_0.pth'
+critic_model_file = 'checkpoint_critic_0.pth'
 
 
-def run_ddpg(max_t_step=300, n_episodes=600):
+def run_ddpg(max_t_step=250, n_episodes=600):
 
     # Create h5 file and store info about alg and its hypereparams
     dat_file_name = create_info_h5(agent, env)
@@ -133,7 +133,7 @@ def run_ddpg(max_t_step=300, n_episodes=600):
         # Save data during training (to not lose the work done) and remove useless
         save_all(dat_file_name=dat_file_name, i_ep=int(i_ep), sigmas_i_ep=env.actions_taken,
                 rew_i_ep=rew_i_ep, en_i_ep=en_i_ep, pri_dim_i_ep=pri_dim_i_ep,
-                act_model_i_ep=actor_model_file, cr_model_i_ep=critic_model_file)
+                act_model_i_ep=torch.load(actor_model_file), cr_model_i_ep=torch.load(critic_model_file))
 
         rm_useless_files(actor_model_file, critic_model_file, env.file_sigmas)
 
